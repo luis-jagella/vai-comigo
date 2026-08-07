@@ -1,6 +1,0 @@
-spring:
-  application:
-    name: vai-comigo
-
-server:
-  shutdown: graceful
