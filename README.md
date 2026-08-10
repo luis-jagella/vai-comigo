@@ -55,6 +55,7 @@ curl http://localhost:8080/api/v1/status
 
 - [Visão do produto](docs/product/vision.md)
 - [Roadmap do MVP](docs/product/roadmap.md)
+- [Kit de pesquisa com usuários](docs/research/README.md)
 - [Arquitetura inicial](docs/architecture/adr/0001-modular-monolith.md)
 - [Como contribuir](CONTRIBUTING.md)
 - [Política de segurança](SECURITY.md)
