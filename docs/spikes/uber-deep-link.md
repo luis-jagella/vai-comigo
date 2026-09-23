@@ -4,6 +4,8 @@
 
 O MVP usará o deep link padrão `uber://riderequest` para encaminhar uma viagem preparada ao aplicativo oficial do Uber. O Vai Comigo não solicita nem confirma a corrida.
 
+A decisão, suas consequências e a condição para aceitá-la estão registradas no [ADR 0002](../architecture/adr/0002-uber-deep-link.md).
+
 Essa escolha evita a necessidade de credenciais, pagamento ou acesso privilegiado à Riders API durante a descoberta. A documentação oficial do Uber descreve deep links como opção de menor esforço para abrir o aplicativo nativo com parâmetros de viagem. [Introdução aos deep links](https://developer.uber.com/docs/riders/ride-requests/tutorials/deep-links/introduction)
 
 ## Contrato implementado
