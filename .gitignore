@@ -1,4 +1,6 @@
 target/
+output/
+tmp/
 .idea/
 .vscode/
 *.iml
