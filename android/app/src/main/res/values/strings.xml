@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Vai Comigo</string>
+    <string name="destinations">Destinos</string>
+    <string name="destinations_description">Seus lugares favoritos aparecerão aqui. O cadastro estará disponível em uma próxima versão.</string>
+    <string name="help">Ajuda</string>
+    <string name="help_description">O Vai Comigo ajuda a preparar uma viagem. Você revisará e confirmará a corrida no aplicativo oficial. Se precisar de ajuda, converse com uma pessoa de confiança.</string>
+    <string name="settings">Configurações</string>
+    <string name="settings_description">Para aumentar as letras ou ativar o leitor de tela, use as opções de acessibilidade do seu celular.</string>
+    <string name="open_accessibility">Abrir acessibilidade do celular</string>
+    <string name="accessibility_unavailable">Não foi possível abrir as configurações. Procure Acessibilidade nas configurações do seu celular.</string>
+    <string name="back_to_destinations">Voltar para destinos</string>
+    <string name="prototype_notice">Versão de teste. Nenhuma corrida será solicitada.</string>
+</resources>
