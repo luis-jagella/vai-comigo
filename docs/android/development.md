@@ -1,9 +1,10 @@
 # Desenvolvimento Android
 
 O módulo `android/` é um cliente Java independente do backend Maven. Esta
-primeira versão contém navegação entre Destinos, Ajuda e Configurações. Não
-possui cadastro de favoritos nem integração com Uber; esses incrementos estão
-nas issues #5 a #7. O teste físico do deep link permanece na issue #3.
+versão contém navegação entre Destinos, Ajuda e Configurações, além de cadastro,
+edição, exclusão com confirmação e seleção de até cinco destinos favoritos.
+Localização e integração com Uber continuam nas issues #6 e #7. O teste físico
+do deep link permanece na issue #3.
 
 ## Compilar
 
@@ -28,7 +29,9 @@ Com um emulador ou aparelho conectado por ADB:
 ```
 
 Os testes instrumentados exercitam as telas de ajuda e configurações, o
-retorno a destinos e os alvos de toque. A integração contínua compila o APK,
+retorno a destinos, os alvos de toque, o armazenamento e o fluxo completo de
+favoritos (incluindo cancelamento da exclusão e restauração do formulário).
+A integração contínua compila o APK,
 executa lint e esses testes em um emulador.
 
 ## Baseline de acessibilidade
@@ -44,3 +47,33 @@ Antes de encerrar a issue #4, validar manualmente no aparelho: leitura e ordem
 de foco com TalkBack, fonte ampliada em 200%, navegação em orientação horizontal
 e contraste dos estados dos botões. Registrar dispositivo, versão Android,
 resultados e problemas encontrados. Compilação e lint não substituem esse teste.
+
+## Favoritos locais
+
+Na tela inicial, toque em **Adicionar lugar**, informe nome e endereço e salve.
+O cartão do lugar permite selecioná-lo e revisar o endereço. **Organizar meus
+lugares** permite editar ou excluir. A exclusão exige confirmação.
+
+Os nomes têm até 40 caracteres e os endereços até 240. Não há busca nem
+validação geográfica nesta etapa: o endereço é texto informado pela pessoa.
+A seleção ainda não inicia uma corrida.
+
+`FavoriteStore` armazena até cinco registros com identificador estável em
+SharedPreferences privadas (`favorites`). Não há envio para backend, geocodificador
+ou telemetria. O manifesto desabilita backup e as regras de extração excluem
+dados de backup em nuvem e transferência de aparelho. Não há criptografia
+adicional implementada pelo aplicativo. Remover o app remove seus favoritos.
+
+Dados inválidos no armazenamento geram uma mensagem de erro e não são
+sobrescritos silenciosamente. Ainda não há uma ferramenta de recuperação
+de armazenamento danificado na interface.
+
+### Roteiro de teste
+
+1. Cadastre `Casa de teste` em `Rua Fictícia, 123, Cidade Exemplo`.
+2. Feche e reabra o app; confirme a presença do cartão.
+3. Selecione o lugar e confira o endereço.
+4. Edite o nome e confirme a atualização do mesmo favorito.
+5. Tente excluir, cancele e confira que o cartão permanece; depois confirme.
+6. Cadastre cinco lugares; o sexto deve ser bloqueado, mas a edição deve funcionar.
+7. Repita com fonte em 200% e TalkBack, verificando rótulos, rolagem e erros.
