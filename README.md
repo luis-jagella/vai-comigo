@@ -19,6 +19,8 @@ O Vai Comigo reduz a carga de pedir uma corrida sem retirar da pessoa passageira
 
 O repositório contém a fundação do backend e a documentação inicial do produto. Nenhuma corrida real é solicitada neste estágio.
 
+O cliente Android inicial oferece navegação entre Destinos, Ajuda e Configurações. Veja [como compilar e testar o aplicativo](docs/android/development.md).
+
 ## Tecnologias
 
 - Java 17
