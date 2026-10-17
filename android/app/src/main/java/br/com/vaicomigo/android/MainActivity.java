@@ -259,6 +259,10 @@ public final class MainActivity extends Activity {
                     selected.addView(text(destination.name, 26, INK));
                     selected.addView(text(destination.address, 20, MUTED));
                     content.addView(text(getString(R.string.selected_note), 19, MUTED));
+                    button(content, getString(R.string.choose_pickup), true, () -> startActivity(
+                            new Intent(this, PickupActivity.class)
+                                    .putExtra(PickupActivity.DESTINATION_NAME, destination.name)
+                                    .putExtra(PickupActivity.DESTINATION_ADDRESS, destination.address)));
                     break;
                 }
             }
