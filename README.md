@@ -21,12 +21,15 @@ O repositório contém a fundação do backend e a documentação inicial do pro
 
 O cliente Android oferece uma tela inicial com até cinco destinos favoritos locais, cadastro, edição, exclusão com confirmação e telas de Ajuda e Configurações. Veja [como compilar e testar o aplicativo](docs/android/development.md).
 
+A base Android e os favoritos já estão integrados à `main`. A validação com TalkBack e pessoas usuárias permanece pendente. Os próximos incrementos são a localização de embarque com consentimento e a revisão da viagem antes de abrir o Uber; o encaminhamento ainda precisa ser validado em aparelho físico.
+
 ## Tecnologias
 
 - Java 17
 - Spring Boot 4.1
 - Maven
-- JUnit 5
+- Android SDK 36 e Gradle 8.14 (cliente Android em Java)
+- JUnit 5 (backend) e AndroidX Test/Espresso (Android)
 - GitHub Actions
 
 ## Executar localmente
@@ -48,6 +51,15 @@ curl http://localhost:8080/api/v1/status
 ```bash
 ./mvnw verify
 ```
+
+Para compilar e verificar o Android, configure o SDK conforme o [guia de desenvolvimento](docs/android/development.md) e execute:
+
+```bash
+cd android
+./gradlew assembleDebug lintDebug
+```
+
+No Windows, use `gradlew.bat`. Para os testes de interface, execute `connectedDebugAndroidTest` com um emulador ou aparelho conectado.
 
 ## Contribuição e segurança
 
