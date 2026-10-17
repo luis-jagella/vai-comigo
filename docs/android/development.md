@@ -3,7 +3,9 @@
 O módulo `android/` é um cliente Java independente do backend Maven. Esta
 versão contém navegação entre Destinos, Ajuda e Configurações, além de cadastro,
 edição, exclusão com confirmação e seleção de até cinco destinos favoritos.
-Localização e integração com Uber continuam nas issues #6 e #7. O teste físico
+O [fluxo de embarque com consentimento](pickup.md) permite usar localização
+ou informar endereço manual e revisar a viagem. A integração com Uber continua
+na issue #7. O teste físico
 do deep link permanece na issue #3.
 
 ## Compilar
@@ -14,7 +16,7 @@ Pré-requisitos: JDK 17, Android SDK Platform 36 e Build Tools 35.0.0. Defina
 
 ```bash
 cd android
-./gradlew assembleDebug lintDebug
+./gradlew assembleDebug lintDebug testDebugUnitTest
 ```
 
 No Windows, use `gradlew.bat`. O APK fica em
