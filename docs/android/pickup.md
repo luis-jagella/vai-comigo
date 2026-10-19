@@ -15,6 +15,10 @@ funciona sem localização.
 - Considera utilizável uma posição finita, com até dois minutos de idade e
   precisão estimada de até 100 metros. Este limite é provisório e precisa de
   validação física antes de um piloto; não garante o ponto exato de embarque.
+- Revalida a idade ao revisar a viagem, somando o tempo de espera desde a
+  leitura com um relógio monotônico. Se a posição expirou, descarta as
+  coordenadas e oferece outra leitura ou endereço manual. A futura integração
+  com o Uber também deverá conferir a validade antes de encaminhar a viagem.
 - Sem sinal, permissão negada ou precisão insuficiente, oferece endereço manual
   e uma nova tentativa explícita. Não abre configurações nem pede novamente
   sem uma ação da pessoa.

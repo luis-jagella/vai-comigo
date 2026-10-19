@@ -2,6 +2,7 @@ package br.com.vaicomigo.android;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class PickupSessionTest {
     private static final double LATITUDE = -23.55, LONGITUDE = -46.63;
@@ -115,6 +116,47 @@ public class PickupSessionTest {
         assertThrows(IllegalArgumentException.class, () -> session.reviewManual(" "));
         assertThrows(IllegalArgumentException.class, () -> session.reviewManual(new String(new char[241]).replace('\0', 'x')));
         assertEquals(PickupSession.State.MANUAL, session.state());
+    }
+
+    @Test public void reviewRejectsPositionThatExpiredWhileUserWasWaiting() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 90_000);
+        clock.addAndGet(30_001);
+
+        assertFalse(session.reviewLocation());
+        assertEquals(PickupSession.State.UNAVAILABLE, session.state());
+        assertNull(session.position());
+        session.manual();
+        session.reviewManual("Rua Fictícia, 123");
+        assertEquals(PickupSession.State.REVIEW, session.state());
+    }
+
+    @Test public void reviewAllowsPositionAtExactFreshnessBoundary() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 90_000);
+        clock.addAndGet(30_000);
+
+        assertTrue(session.reviewLocation());
+        assertEquals(PickupSession.State.REVIEW, session.state());
+        assertNotNull(session.position());
+    }
+
+    @Test public void retryUsesNewPositionAgeInsteadOfPreviousDeadline() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 119_000);
+        clock.addAndGet(2_000);
+        assertFalse(session.reviewLocation());
+
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 0);
+        clock.addAndGet(2_000);
+        assertTrue(session.reviewLocation());
     }
 
     private PickupSession locatedSession() {
