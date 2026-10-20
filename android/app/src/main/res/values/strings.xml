@@ -50,7 +50,16 @@
     <string name="pickup_label">Embarque</string>
     <string name="destination_label">Destino</string>
     <string name="current_pickup">Localização atual do celular</string>
-    <string name="review_unavailable">Nenhuma corrida foi solicitada. A abertura do aplicativo oficial ainda não está disponível nesta versão.</string>
+    <string name="review_unavailable">Ao continuar, você abrirá o Uber. Nesta versão, preencha o embarque e o destino no Uber e confira os dados antes de confirmar a corrida. Nenhuma corrida foi solicitada.</string>
+    <string name="listen_review">Ouvir resumo</string>
+    <string name="stop_reading">Parar leitura</string>
+    <string name="review_spoken">Embarque: %1$s. Destino: %2$s. Endereço do destino: %3$s. %4$s</string>
+    <string name="speech_unavailable">A voz local em português não está disponível neste celular. Você pode ler o resumo na tela.</string>
+    <string name="continue_uber">Continuar no Uber</string>
+    <string name="confirm_uber_title">Abrir o Uber agora?</string>
+    <string name="confirm_uber_description">O Vai Comigo abrirá o aplicativo Uber. Nesta versão, os endereços não são preenchidos automaticamente. Digite o embarque e o destino no Uber, confira o valor e confirme a corrida somente lá.</string>
+    <string name="open_uber">Sim, abrir o Uber</string>
+    <string name="uber_unavailable">Não foi possível abrir o Uber neste celular. Confira se ele está instalado. Seus dados continuam nesta revisão; você pode tentar novamente ou voltar ao destino.</string>
     <string name="change_pickup">Alterar embarque</string>
     <string name="finish_pickup">Voltar ao destino</string>
     <string name="local_note">Seus lugares ficam salvos apenas neste celular.</string>
