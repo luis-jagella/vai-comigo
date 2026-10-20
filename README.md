@@ -21,7 +21,7 @@ O repositório contém a fundação do backend e a documentação inicial do pro
 
 O cliente Android oferece uma tela inicial com até cinco destinos favoritos locais, cadastro, edição, exclusão com confirmação e telas de Ajuda e Configurações. Veja [como compilar e testar o aplicativo](docs/android/development.md).
 
-A base Android e os favoritos já estão integrados à `main`. O [fluxo de embarque](docs/android/pickup.md) oferece localização com consentimento ou endereço manual e revisão da viagem. A validação com TalkBack e pessoas usuárias permanece pendente. O próximo incremento é abrir o Uber; o encaminhamento ainda precisa ser validado em aparelho físico.
+A base Android e os favoritos já estão integrados à `main`. O [fluxo de embarque](docs/android/pickup.md) oferece localização com consentimento ou endereço manual e revisão da viagem. A [abertura do Uber](docs/android/uber-handoff.md) exige confirmação e oferece resumo falado com voz local, quando disponível. Os endereços ainda devem ser preenchidos no Uber. TalkBack, teste com pessoas usuárias e preenchimento automático validado em aparelho físico permanecem pendentes.
 
 ## Tecnologias
 

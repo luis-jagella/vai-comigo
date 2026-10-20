@@ -22,7 +22,7 @@ funciona sem localização.
 - Sem sinal, permissão negada ou precisão insuficiente, oferece endereço manual
   e uma nova tentativa explícita. Não abre configurações nem pede novamente
   sem uma ação da pessoa.
-- A revisão mostra embarque e destino. Não abre o Uber nem solicita corrida.
+- A revisão mostra embarque e destino e permite uma [abertura explícita do Uber](uber-handoff.md), ainda sem preenchimento automático. Não solicita corrida.
   Na localização automática, mostra a precisão estimada; não resolve endereço
   por geocodificação nem envia coordenadas a um serviço externo do aplicativo.
 

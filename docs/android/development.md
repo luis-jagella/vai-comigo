@@ -5,7 +5,8 @@ versão contém navegação entre Destinos, Ajuda e Configurações, além de ca
 edição, exclusão com confirmação e seleção de até cinco destinos favoritos.
 O [fluxo de embarque com consentimento](pickup.md) permite usar localização
 ou informar endereço manual e revisar a viagem. A integração com Uber continua
-na issue #7. O teste físico
+na issue #7; a [abertura inicial com resumo falado](uber-handoff.md) já permite
+continuar no app oficial, ainda sem preencher os endereços. O teste físico
 do deep link permanece na issue #3.
 
 ## Compilar
