@@ -165,4 +165,36 @@ public class PickupSessionTest {
         session.located(LATITUDE, LONGITUDE, 10, 0);
         return session;
     }
+
+    @Test public void handoffRequiresAReviewedPickup() {
+        PickupSession session = new PickupSession();
+        assertFalse(session.readyToHandoff());
+        session.manual();
+        assertFalse(session.readyToHandoff());
+        session.reviewManual("Rua Fictícia, 123");
+        assertTrue(session.readyToHandoff());
+        session.reset();
+        assertFalse(session.readyToHandoff());
+    }
+
+    @Test public void handoffRechecksPositionAgeAfterReview() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 0);
+        assertTrue(session.reviewLocation());
+        assertTrue(session.readyToHandoff());
+        clock.addAndGet(120_001);
+        assertFalse(session.readyToHandoff());
+        assertNull(session.position());
+        assertEquals(PickupSession.State.UNAVAILABLE, session.state());
+    }
+
+    @Test public void revokedPermissionPreventsPreviouslyReviewedHandoff() {
+        PickupSession session = locatedSession();
+        session.reviewLocation();
+        session.permissionRevoked();
+        assertFalse(session.readyToHandoff());
+        assertNull(session.position());
+    }
 }
