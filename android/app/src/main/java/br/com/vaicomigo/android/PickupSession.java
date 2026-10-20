@@ -93,14 +93,28 @@ public final class PickupSession {
         if (state != State.LOCATED || position == null) {
             throw new IllegalStateException("Pickup position unavailable");
         }
-        long waitingMillis = clock.getAsLong() - positionReceivedAtMillis;
-        if (waitingMillis < 0 || waitingMillis > MAX_LOCATION_AGE_MILLIS - positionAgeMillis) {
+        if (!positionIsFresh()) {
             clear();
             state = State.UNAVAILABLE;
             return false;
         }
         state = State.REVIEW;
         return true;
+    }
+
+    public boolean readyToHandoff() {
+        if (state != State.REVIEW) { return false; }
+        if (position != null && !positionIsFresh()) {
+            clear();
+            state = State.UNAVAILABLE;
+            return false;
+        }
+        return true;
+    }
+
+    private boolean positionIsFresh() {
+        long waitingMillis = clock.getAsLong() - positionReceivedAtMillis;
+        return waitingMillis >= 0 && waitingMillis <= MAX_LOCATION_AGE_MILLIS - positionAgeMillis;
     }
 
     public void reset() {

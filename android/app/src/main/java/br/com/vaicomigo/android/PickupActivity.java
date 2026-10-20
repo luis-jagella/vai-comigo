@@ -2,6 +2,7 @@ package br.com.vaicomigo.android;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -17,6 +18,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /** Pickup details exist only while this screen is in the foreground. */
 public final class PickupActivity extends Activity {
@@ -28,6 +30,9 @@ public final class PickupActivity extends Activity {
     private PickupLocationReader reader;
     private boolean visible;
     private String destinationName, destinationAddress;
+    private OfflineReviewSpeaker speaker;
+    private AlertDialog confirmation;
+    private boolean handoffFailed;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -38,6 +43,7 @@ public final class PickupActivity extends Activity {
             return;
         }
         reader = new PickupLocationReader(this);
+        speaker = new OfflineReviewSpeaker(this);
     }
 
     @Override protected void onStart() {
@@ -59,6 +65,9 @@ public final class PickupActivity extends Activity {
     @Override protected void onStop() {
         visible = false;
         if (reader != null) { reader.cancel(); }
+        if (speaker != null) { speaker.stop(); }
+        if (confirmation != null) { confirmation.dismiss(); confirmation = null; }
+        handoffFailed = false;
         session.reset();
         super.onStop();
     }
@@ -107,6 +116,47 @@ public final class PickupActivity extends Activity {
         reader.cancel();
         session.manual();
         render();
+    }
+
+    private boolean canHandoff() {
+        if (!visible || session.state() != PickupSession.State.REVIEW) { return false; }
+        if (session.position() != null && !reader.permitted()) { session.permissionRevoked(); }
+        if (!session.readyToHandoff()) {
+            speaker.stop();
+            render();
+            return false;
+        }
+        return true;
+    }
+
+    private void confirmUber() {
+        if (!canHandoff()) { return; }
+        speaker.stop();
+        if (confirmation != null && confirmation.isShowing()) { return; }
+        confirmation = new AlertDialog.Builder(this).setTitle(R.string.confirm_uber_title)
+                .setMessage(R.string.confirm_uber_description)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.open_uber, (dialog, which) -> {
+                    if (!canHandoff()) { return; }
+                    if (UberHandoff.open(this)) {
+                        session.reset();
+                        finish();
+                    } else {
+                        handoffFailed = true;
+                        render();
+                    }
+                }).create();
+        confirmation.show();
+    }
+
+    private void readReview() {
+        if (!canHandoff()) { return; }
+        speaker.read(getString(R.string.review_spoken, session.address() != null ? session.address()
+                : getString(R.string.current_pickup), destinationName, destinationAddress,
+                getString(R.string.review_unavailable))
+                        + (handoffFailed ? " " + getString(R.string.uber_unavailable) : ""), () -> {
+                    if (visible) { Toast.makeText(this, R.string.speech_unavailable, Toast.LENGTH_LONG).show(); }
+                });
     }
 
     private void render() {
@@ -203,7 +253,16 @@ public final class PickupActivity extends Activity {
                 paragraph(content, getString(R.string.destination_label), 22);
                 paragraph(content, destinationName + "\n" + destinationAddress, 20);
                 paragraph(content, getString(R.string.review_unavailable), 18);
+                if (handoffFailed) {
+                    TextView handoffError = paragraph(content, getString(R.string.uber_unavailable), 20);
+                    handoffError.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+                }
+                button(content, R.string.listen_review, false, this::readReview);
+                button(content, R.string.stop_reading, false, speaker::stop);
+                button(content, R.string.continue_uber, true, this::confirmUber);
                 button(content, R.string.change_pickup, false, () -> {
+                    speaker.stop();
+                    handoffFailed = false;
                     reader.cancel();
                     session.reset();
                     render();
