@@ -68,8 +68,18 @@ dados de backup em nuvem e transferência de aparelho. Não há criptografia
 adicional implementada pelo aplicativo. Remover o app remove seus favoritos.
 
 Dados inválidos no armazenamento geram uma mensagem de erro e não são
-sobrescritos silenciosamente. Ainda não há uma ferramenta de recuperação
-de armazenamento danificado na interface.
+sobrescritos silenciosamente, inclusive quando a preferência tem um tipo
+incorreto. **Tentar ler meus lugares novamente** repete a leitura sem alterar
+o conteúdo. A Ajuda continua disponível nessa tela.
+
+Se o problema persistir, **Apagar dados dos lugares e recomeçar** oferece uma
+saída destrutiva com confirmação explícita: todos os lugares antigos serão
+perdidos, sem desfazer ou recuperação parcial. Cancelar, sair ou recriar a
+tela não confirma a exclusão. O app verifica novamente se os favoritos são
+ilegíveis antes de remover apenas a chave `destinations`; uma coleção que
+voltou a ser válida é preservada, assim como outras preferências. Depois da
+remoção, é possível cadastrar os lugares novamente. Nada é enviado a serviços
+externos e o conteúdo ilegível não é registrado em logs.
 
 ### Roteiro de teste
 
@@ -80,3 +90,13 @@ de armazenamento danificado na interface.
 5. Tente excluir, cancele e confira que o cartão permanece; depois confirme.
 6. Cadastre cinco lugares; o sexto deve ser bloqueado, mas a edição deve funcionar.
 7. Repita com fonte em 200% e TalkBack, verificando rótulos, rolagem e erros.
+
+### Testar recuperação sem dados reais
+
+`FavoriteRecoveryTest` usa um emulador de desenvolvimento e dados fictícios
+para verificar tentativa de leitura, cancelamento, recriação da tela, confirmação
+após tipo incorreto, novo cadastro e proteção de dados que voltaram a ser legíveis.
+`FavoriteStoreTest` também verifica que outras preferências não são apagadas e
+que uma coleção válida ou vazia não pode ser descartada por essa operação.
+Não provoque corrupção em um aparelho que contenha favoritos reais. Falhas
+reais de escrita em disco e leitura com TalkBack ainda exigem validação específica.
