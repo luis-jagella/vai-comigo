@@ -66,4 +66,41 @@ public class FavoriteStoreTest {
                 new FavoriteDestination("test", "Casa de teste", "Rua Fictícia, 10")));
         assertEquals("damaged", preferences.getString("destinations", ""));
     }
+
+    @Test
+    public void wrongPreferenceTypeIsReportedWithoutOverwritingIt() {
+        assertTrue(preferences.edit().putInt("destinations", 42).commit());
+        assertThrows(IllegalStateException.class, store::load);
+        assertThrows(IllegalStateException.class, () -> store.save(
+                new FavoriteDestination("test", "Casa de teste", "Rua Fictícia, 10")));
+        assertEquals(42, preferences.getInt("destinations", 0));
+    }
+
+    @Test
+    public void recoveryRemovesOnlyUnreadableFavoritesAndAllowsNewOnes() {
+        assertTrue(preferences.edit().putString("destinations", "damaged")
+                .putString("unrelated-test-key", "keep").commit());
+        store.discardUnreadableFavorites();
+        assertFalse(preferences.contains("destinations"));
+        assertEquals("keep", preferences.getString("unrelated-test-key", ""));
+        assertTrue(store.load().isEmpty());
+        store.save(new FavoriteDestination("new-test", "Novo lugar", "Rua Fictícia, 20"));
+        assertEquals("new-test", new FavoriteStore(preferences).load().get(0).id);
+    }
+
+    @Test
+    public void recoveryAlsoHandlesWrongPreferenceType() {
+        assertTrue(preferences.edit().putBoolean("destinations", true).commit());
+        store.discardUnreadableFavorites();
+        assertTrue(store.load().isEmpty());
+    }
+
+    @Test
+    public void recoveryRefusesReadableOrEmptyFavorites() {
+        assertThrows(IllegalStateException.class, store::discardUnreadableFavorites);
+        store.save(new FavoriteDestination("keep", "Casa de teste", "Rua Fictícia, 10"));
+        String original = preferences.getString("destinations", "");
+        assertThrows(IllegalStateException.class, store::discardUnreadableFavorites);
+        assertEquals(original, preferences.getString("destinations", ""));
+    }
 }
