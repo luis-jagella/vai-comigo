@@ -26,6 +26,13 @@
     <string name="name_error">Escreva um nome com até 40 caracteres.</string>
     <string name="address_error">Escreva o endereço com até 240 caracteres.</string>
     <string name="storage_error">Não foi possível acessar seus lugares. Tente novamente.</string>
+    <string name="storage_read_error">Não conseguimos ler seus lugares salvos. Eles ainda não foram apagados. Tente novamente ou peça ajuda a uma pessoa de confiança. Se o problema continuar, você pode apagar os dados dos lugares e cadastrá-los de novo.</string>
+    <string name="retry_favorites">Tentar ler meus lugares novamente</string>
+    <string name="restart_favorites">Apagar dados dos lugares e recomeçar</string>
+    <string name="restart_favorites_title">Apagar os lugares antigos?</string>
+    <string name="restart_favorites_message">Todos os lugares antigos serão perdidos neste celular. Não é possível desfazer. Depois, será necessário cadastrar cada endereço novamente. Para manter os dados, toque em Cancelar.</string>
+    <string name="restart_favorites_confirm">Sim, apagar e recomeçar</string>
+    <string name="storage_restart_error">Não foi possível recomeçar ou seus lugares já podem ser lidos. Confira a tela antes de tentar novamente.</string>
     <string name="saved">Lugar salvo</string>
     <string name="selected_title">Seu destino</string>
     <string name="selected_note">Confira o destino e escolha onde você vai embarcar.</string>
