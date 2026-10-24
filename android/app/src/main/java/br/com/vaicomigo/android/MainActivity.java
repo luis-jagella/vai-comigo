@@ -34,6 +34,7 @@ public final class MainActivity extends Activity {
     private FavoriteStore store;
     private EditText nameInput, addressInput;
     private String draftName = "", draftAddress = "";
+    private AlertDialog recoveryConfirmation;
 
     @Override
     public void onCreate(Bundle state) {
@@ -55,6 +56,15 @@ public final class MainActivity extends Activity {
         state.putString("draftName", screen == FORM ? nameInput.getText().toString() : "");
         state.putString("draftAddress", screen == FORM ? addressInput.getText().toString() : "");
         super.onSaveInstanceState(state);
+    }
+
+    @Override
+    protected void onStop() {
+        if (recoveryConfirmation != null) {
+            recoveryConfirmation.dismiss();
+            recoveryConfirmation = null;
+        }
+        super.onStop();
     }
 
     @Override
@@ -121,8 +131,10 @@ public final class MainActivity extends Activity {
         try {
             values = store.load();
         } catch (IllegalStateException exception) {
-            content.addView(text(getString(R.string.storage_error), 20, INK));
-            button(content, getString(R.string.back_to_destinations), false, () -> show(HOME));
+            content.addView(text(getString(R.string.storage_read_error), 20, INK));
+            button(content, getString(R.string.retry_favorites), true, () -> show(screen));
+            button(content, getString(R.string.restart_favorites), false, this::confirmRecovery);
+            button(content, getString(R.string.help), false, () -> show(HELP));
             return;
         }
         space(content, 12);
@@ -248,6 +260,27 @@ public final class MainActivity extends Activity {
                         Toast.makeText(this, R.string.storage_error, Toast.LENGTH_LONG).show();
                     }
                 }).show();
+    }
+
+    private void confirmRecovery() {
+        recoveryConfirmation = new AlertDialog.Builder(this)
+                .setTitle(R.string.restart_favorites_title)
+                .setMessage(R.string.restart_favorites_message)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.restart_favorites_confirm, (dialog, which) -> {
+                    try {
+                        store.discardUnreadableFavorites();
+                        selectedId = null;
+                        draftName = "";
+                        draftAddress = "";
+                        show(HOME);
+                    } catch (IllegalStateException exception) {
+                        Toast.makeText(this, R.string.storage_restart_error, Toast.LENGTH_LONG).show();
+                        show(HOME);
+                    }
+                }).create();
+        recoveryConfirmation.setOnDismissListener(dialog -> recoveryConfirmation = null);
+        recoveryConfirmation.show();
     }
 
     private void selection(LinearLayout content) {

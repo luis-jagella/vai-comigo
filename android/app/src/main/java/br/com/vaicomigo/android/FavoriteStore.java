@@ -18,7 +18,11 @@ public final class FavoriteStore {
 
     public List<FavoriteDestination> load() {
         try {
-            JSONArray values = new JSONArray(preferences.getString("destinations", "[]"));
+            String encoded = preferences.getString("destinations", "[]");
+            if (encoded == null) {
+                throw new IllegalStateException("Missing favorite collection");
+            }
+            JSONArray values = new JSONArray(encoded);
             List<FavoriteDestination> result = new ArrayList<>();
             if (values.length() > MAX_FAVORITES) {
                 throw new IllegalStateException("Invalid favorite collection");
@@ -35,7 +39,7 @@ public final class FavoriteStore {
                 result.add(destination);
             }
             return result;
-        } catch (JSONException | IllegalArgumentException exception) {
+        } catch (JSONException | IllegalArgumentException | ClassCastException exception) {
             throw new IllegalStateException("Unable to read favorites", exception);
         }
     }
@@ -60,6 +64,19 @@ public final class FavoriteStore {
         List<FavoriteDestination> values = load();
         values.removeIf(destination -> destination.id.equals(id));
         write(values);
+    }
+
+    /** Call only after explicit confirmation. Never discards a readable collection. */
+    public void discardUnreadableFavorites() {
+        try {
+            load();
+        } catch (IllegalStateException exception) {
+            if (!preferences.edit().remove("destinations").commit()) {
+                throw new IllegalStateException("Unable to discard unreadable favorites");
+            }
+            return;
+        }
+        throw new IllegalStateException("Readable favorites must not be discarded");
     }
 
     private void write(List<FavoriteDestination> values) {
