@@ -218,6 +218,7 @@ public final class PickupActivity extends Activity {
                 address.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS
                         | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
                 address.setFilters(new InputFilter[]{new InputFilter.LengthFilter(240)});
+                address.setText(session.address() == null ? "" : session.address());
                 address.setMinHeight(dp(80));
                 label.setLabelFor(address.getId());
                 content.addView(address, fullWidth());
@@ -260,6 +261,14 @@ public final class PickupActivity extends Activity {
                 button(content, R.string.listen_review, false, this::readReview);
                 button(content, R.string.stop_reading, false, speaker::stop);
                 button(content, R.string.continue_uber, true, this::confirmUber);
+                if (session.address() != null) {
+                    button(content, R.string.edit_pickup_address, false, () -> {
+                        speaker.stop();
+                        handoffFailed = false;
+                        session.editManual();
+                        render();
+                    });
+                }
                 button(content, R.string.change_pickup, false, () -> {
                     speaker.stop();
                     handoffFailed = false;
