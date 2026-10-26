@@ -9,6 +9,10 @@ na issue #7; a [abertura inicial com resumo falado](uber-handoff.md) já permite
 continuar no app oficial, ainda sem preencher os endereços. O teste físico
 do deep link permanece na issue #3.
 
+O embarque manual pode ser corrigido a partir da revisão com o texto preenchido,
+sem alterar o destino. É necessário revisar novamente antes de continuar; veja
+o [comportamento e os limites de privacidade](pickup.md#corrigir-o-endereço-manual).
+
 ## Compilar
 
 Pré-requisitos: JDK 17, Android SDK Platform 36 e Build Tools 35.0.0. Defina
