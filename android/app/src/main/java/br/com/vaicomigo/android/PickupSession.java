@@ -89,6 +89,14 @@ public final class PickupSession {
         state = State.REVIEW;
     }
 
+    /** Keeps a transient draft, but requires review again before handoff. */
+    public void editManual() {
+        if (state != State.REVIEW || address == null) {
+            throw new IllegalStateException("Reviewed manual pickup unavailable");
+        }
+        state = State.MANUAL;
+    }
+
     public boolean reviewLocation() {
         if (state != State.LOCATED || position == null) {
             throw new IllegalStateException("Pickup position unavailable");

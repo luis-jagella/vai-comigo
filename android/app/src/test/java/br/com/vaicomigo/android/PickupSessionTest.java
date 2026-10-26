@@ -197,4 +197,59 @@ public class PickupSessionTest {
         assertFalse(session.readyToHandoff());
         assertNull(session.position());
     }
+
+    @Test public void editingKeepsDraftButRequiresANewManualReview() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        session.reviewManual("Rua Fictícia, 10");
+        session.editManual();
+        assertEquals(PickupSession.State.MANUAL, session.state());
+        assertEquals("Rua Fictícia, 10", session.address());
+        assertNull(session.position());
+        assertFalse(session.readyToHandoff());
+        session.reviewManual(" Rua Fictícia, 20 ");
+        assertEquals("Rua Fictícia, 20", session.address());
+        assertTrue(session.readyToHandoff());
+    }
+
+    @Test public void editingOnlyAcceptsAReviewedManualPickup() {
+        PickupSession session = new PickupSession();
+        assertThrows(IllegalStateException.class, session::editManual);
+        session.manual();
+        assertThrows(IllegalStateException.class, session::editManual);
+        PickupSession located = locatedSession();
+        located.reviewLocation();
+        assertThrows(IllegalStateException.class, located::editManual);
+        assertEquals(PickupSession.State.REVIEW, located.state());
+        assertNotNull(located.position());
+    }
+
+    @Test public void invalidCorrectionCannotReusePreviousReview() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        session.reviewManual("Rua Fictícia, 10");
+        session.editManual();
+        assertThrows(IllegalArgumentException.class, () -> session.reviewManual(" "));
+        assertThrows(IllegalArgumentException.class, () -> session.reviewManual(
+                new String(new char[241]).replace('\0', 'x')));
+        assertEquals(PickupSession.State.MANUAL, session.state());
+        assertFalse(session.readyToHandoff());
+    }
+
+    @Test public void resettingOrChoosingAnotherMethodDiscardsEditDraft() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        session.reviewManual("Rua Fictícia, 10");
+        session.editManual();
+        session.reset();
+        assertNull(session.address());
+        assertFalse(session.readyToHandoff());
+        session.manual();
+        session.reviewManual("Rua Fictícia, 20");
+        session.editManual();
+        session.useLocation(false);
+        assertNull(session.address());
+        assertNull(session.position());
+        assertEquals(PickupSession.State.PERMISSION, session.state());
+    }
 }

@@ -68,6 +68,7 @@
     <string name="open_uber">Sim, abrir o Uber</string>
     <string name="uber_unavailable">Não foi possível abrir o Uber neste celular. Confira se ele está instalado. Seus dados continuam nesta revisão; você pode tentar novamente ou voltar ao destino.</string>
     <string name="change_pickup">Alterar embarque</string>
+    <string name="edit_pickup_address">Corrigir endereço de embarque</string>
     <string name="finish_pickup">Voltar ao destino</string>
     <string name="local_note">Seus lugares ficam salvos apenas neste celular.</string>
     <string name="help">Ajuda</string>

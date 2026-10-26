@@ -26,6 +26,23 @@ funciona sem localização.
   Na localização automática, mostra a precisão estimada; não resolve endereço
   por geocodificação nem envia coordenadas a um serviço externo do aplicativo.
 
+## Corrigir o endereço manual
+
+Na revisão de um embarque digitado, **Corrigir endereço de embarque** reabre o
+campo com o texto anterior, sem exigir redigitação completa nem iniciar localização.
+O destino favorito não é alterado. A narração é interrompida e qualquer aviso de
+falha da tentativa anterior de abrir o Uber é removido.
+
+Depois de corrigir, é obrigatório tocar em **Revisar viagem** novamente; enquanto
+o formulário está aberto, não é possível continuar no Uber. O campo continua
+obrigatório, com limite de 240 caracteres. A confirmação antes de abrir o Uber
+permanece necessária e os endereços ainda são preenchidos no aplicativo oficial.
+
+**Alterar embarque** continua reiniciando a escolha do método e apagando o texto
+anterior. A correção direta não aparece em revisões de localização automática.
+O rascunho de correção é temporário: sair ou recriar a tela o descarta, assim como
+o embarque original. Nenhum rascunho é salvo, registrado em logs ou enviado à rede.
+
 ## Ciclo de vida e privacidade
 
 `PickupSession` mantém endereço manual ou coordenadas apenas em memória.
@@ -49,6 +66,10 @@ Os testes de estado cobrem consentimento, concessão, negativa, revogação,
 timeout, posições antigas ou imprecisas, callbacks atrasados e descarte de dados.
 Os testes de interface cobrem endereço manual, campos obrigatórios, saída para
 segundo plano, negativa no diálogo real do Android e concessão com GPS fictício.
+Também verificam correção com texto preenchido, preservação do destino,
+validação de correções vazias, descarte após recriação e nova revisão/confirmação
+antes de abrir o Uber. Os testes de estado impedem reutilizar a revisão anterior
+durante a edição e rejeitam correção manual de uma revisão por localização.
 O provedor de teste e a autorização de localização simulada são removidos ao
 final. Use instalação de teste limpa em emulador, sem dados reais.
 
@@ -61,6 +82,9 @@ final. Use instalação de teste limpa em emulador, sem dados reais.
    ao voltar, nenhuma posição anterior deve ser reaproveitada.
 5. Desativar localização do aparelho e testar ausência de sinal até o timeout.
 6. Validar o ponto físico e a linguagem com pessoas idosas antes de qualquer piloto.
+7. Digitar um embarque fictício, revisar e corrigir apenas o número. Conferir com
+   TalkBack e fonte ampliada se a diferença entre corrigir o texto e reiniciar o
+   embarque fica clara, sem prometer preservação após sair ou girar o aparelho.
 
 ## Referências
 

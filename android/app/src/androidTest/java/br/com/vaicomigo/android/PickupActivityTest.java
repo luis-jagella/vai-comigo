@@ -3,6 +3,7 @@ package br.com.vaicomigo.android;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.*;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.matcher.ViewMatchers.*;
 import android.content.Context;
 import android.content.Intent;
@@ -56,5 +57,51 @@ public class PickupActivityTest {
             onView(withText(R.string.manual_pickup)).perform(scrollTo(), click());
             onView(withHint(R.string.address_hint)).check(matches(withText("")));
         }
+    }
+
+    @Test public void manualCorrectionPrefillsAddressAndKeepsDestination() {
+        try (ActivityScenario<PickupActivity> scenario = launch()) {
+            openManualCorrection();
+            onView(withHint(R.string.address_hint)).check(matches(withText("Praça Fictícia, 10")));
+            onView(withText(R.string.continue_uber)).check(doesNotExist());
+            onView(withHint(R.string.address_hint)).perform(replaceText("Praça Fictícia, 20"), closeSoftKeyboard());
+            onView(withText(R.string.review_trip)).perform(scrollTo(), click());
+            onView(withText("Praça Fictícia, 20")).perform(scrollTo()).check(matches(isDisplayed()));
+            onView(withText("Praça Fictícia, 10")).check(doesNotExist());
+            onView(withText("Clínica fictícia\nRua Fictícia, 200, Cidade Exemplo"))
+                    .perform(scrollTo()).check(matches(isDisplayed()));
+        }
+    }
+
+    @Test public void blankCorrectionStaysInFormUntilReviewedAgain() {
+        try (ActivityScenario<PickupActivity> scenario = launch()) {
+            openManualCorrection();
+            onView(withHint(R.string.address_hint)).perform(replaceText(" "), closeSoftKeyboard());
+            onView(withText(R.string.review_trip)).perform(scrollTo(), click());
+            onView(withHint(R.string.address_hint)).check(matches(hasErrorText(
+                    InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.address_error))));
+            onView(withText(R.string.continue_uber)).check(doesNotExist());
+            onView(withHint(R.string.address_hint)).perform(replaceText("Praça Fictícia, 30"), closeSoftKeyboard());
+            onView(withText(R.string.review_trip)).perform(scrollTo(), click());
+            onView(withText("Praça Fictícia, 30")).perform(scrollTo()).check(matches(isDisplayed()));
+        }
+    }
+
+    @Test public void recreatingManualCorrectionDiscardsBothPreviousAddressAndDraft() {
+        try (ActivityScenario<PickupActivity> scenario = launch()) {
+            openManualCorrection();
+            onView(withHint(R.string.address_hint)).perform(replaceText("Praça Fictícia, 99"), closeSoftKeyboard());
+            scenario.recreate();
+            onView(withText(R.string.manual_pickup)).perform(scrollTo(), click());
+            onView(withHint(R.string.address_hint)).check(matches(withText("")));
+            onView(withText(R.string.continue_uber)).check(doesNotExist());
+        }
+    }
+
+    private void openManualCorrection() {
+        onView(withText(R.string.manual_pickup)).perform(scrollTo(), click());
+        onView(withHint(R.string.address_hint)).perform(replaceText("Praça Fictícia, 10"), closeSoftKeyboard());
+        onView(withText(R.string.review_trip)).perform(scrollTo(), click());
+        onView(withText(R.string.edit_pickup_address)).perform(scrollTo(), click());
     }
 }
