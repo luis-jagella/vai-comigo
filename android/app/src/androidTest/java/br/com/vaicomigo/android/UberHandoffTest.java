@@ -3,6 +3,7 @@ package br.com.vaicomigo.android;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.*;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.matcher.ViewMatchers.*;
 import static androidx.test.espresso.intent.Intents.*;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasPackage;
@@ -74,6 +75,11 @@ public class UberHandoffTest {
             onView(withText(R.string.uber_unavailable)).perform(scrollTo()).check(matches(isDisplayed()));
             onView(withText("Praça Fictícia, 10")).perform(scrollTo()).check(matches(isDisplayed()));
             intended(hasPackage("com.ubercab"), times(1));
+            onView(withText(R.string.edit_pickup_address)).perform(scrollTo(), click());
+            onView(withHint(R.string.address_hint)).check(matches(withText("Praça Fictícia, 10")));
+            onView(withText(R.string.review_trip)).perform(scrollTo(), click());
+            onView(withText(R.string.uber_unavailable)).check(doesNotExist());
+            intended(hasPackage("com.ubercab"), times(1));
         }
     }
 
@@ -84,6 +90,22 @@ public class UberHandoffTest {
             scenario.moveToState(Lifecycle.State.RESUMED);
             intended(hasPackage("com.ubercab"), times(0));
             onView(withText(R.string.pickup_reason)).check(matches(isDisplayed()));
+        }
+    }
+
+    @Test public void correctedPickupRequiresReviewAndExplicitConfirmation() {
+        intending(hasPackage("com.ubercab")).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null));
+        try (ActivityScenario<PickupActivity> scenario = review()) {
+            onView(withText(R.string.edit_pickup_address)).perform(scrollTo(), click());
+            onView(withHint(R.string.address_hint)).check(matches(withText("Praça Fictícia, 10")));
+            onView(withHint(R.string.address_hint)).perform(replaceText("Praça Fictícia, 20"), closeSoftKeyboard());
+            intended(hasPackage("com.ubercab"), times(0));
+            onView(withText(R.string.review_trip)).perform(scrollTo(), click());
+            onView(withText("Praça Fictícia, 20")).perform(scrollTo()).check(matches(isDisplayed()));
+            onView(withText(R.string.continue_uber)).perform(scrollTo(), click());
+            intended(hasPackage("com.ubercab"), times(0));
+            onView(withText(R.string.open_uber)).perform(click());
+            intended(hasPackage("com.ubercab"), times(1));
         }
     }
 }
