@@ -16,9 +16,23 @@ public final class FavoriteDestination {
     }
 
     private static String requireText(String value, int limit) {
-        if (value == null || value.trim().isEmpty() || value.trim().length() > limit) {
+        String normalized = normalizeText(value);
+        if (normalized.isEmpty() || normalized.length() > limit) {
             throw new IllegalArgumentException("Invalid destination text");
         }
-        return value.trim();
+        return normalized;
+    }
+
+    /** Same boundary normalization for the model and the favorite form, including NBSP. */
+    static String normalizeText(String value) {
+        if (value == null) { return ""; }
+        int start = 0, end = value.length();
+        while (start < end && isBoundarySpace(value.charAt(start))) { start++; }
+        while (end > start && isBoundarySpace(value.charAt(end - 1))) { end--; }
+        return value.substring(start, end);
+    }
+
+    private static boolean isBoundarySpace(char value) {
+        return value <= ' ' || Character.isWhitespace(value) || Character.isSpaceChar(value);
     }
 }

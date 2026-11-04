@@ -73,4 +73,22 @@ public class FavoriteFlowTest {
             assertEquals(before, store().load().size());
         }
     }
+
+    @Test
+    public void unicodeBlankFieldsShowErrorsWithoutCreatingFavorite() {
+        int before = store().load().size();
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            onView(withText(R.string.add_favorite)).perform(scrollTo(), click());
+            onView(withHint(R.string.name_hint)).perform(replaceText("\u00a0\u2003\u202f"), closeSoftKeyboard());
+            onView(withHint(R.string.address_hint)).perform(replaceText(ADDRESS), closeSoftKeyboard());
+            onView(withText(R.string.save_favorite)).perform(scrollTo(), click());
+            onView(withHint(R.string.name_hint)).check(matches(hasErrorText(context.getString(R.string.name_error))));
+            onView(withHint(R.string.name_hint)).perform(replaceText(NAME), closeSoftKeyboard());
+            onView(withHint(R.string.address_hint)).perform(replaceText("\u00a0\u2003\u202f"), closeSoftKeyboard());
+            onView(withText(R.string.save_favorite)).perform(scrollTo(), click());
+            onView(withHint(R.string.address_hint)).check(matches(hasErrorText(context.getString(R.string.address_error))));
+            assertEquals(before, store().load().size());
+        }
+    }
 }
