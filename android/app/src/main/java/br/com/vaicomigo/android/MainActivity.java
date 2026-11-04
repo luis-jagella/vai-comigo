@@ -224,8 +224,8 @@ public final class MainActivity extends Activity {
     }
 
     private void save() {
-        String name = nameInput.getText().toString().trim();
-        String address = addressInput.getText().toString().trim();
+        String name = FavoriteDestination.normalizeText(nameInput.getText().toString());
+        String address = FavoriteDestination.normalizeText(addressInput.getText().toString());
         if (name.isEmpty() || name.length() > 40) {
             nameInput.setError(getString(R.string.name_error));
             nameInput.requestFocus();
