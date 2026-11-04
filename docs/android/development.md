@@ -65,6 +65,12 @@ Os nomes têm até 40 caracteres e os endereços até 240. Não há busca nem
 validação geográfica nesta etapa: o endereço é texto informado pela pessoa.
 A seleção ainda não inicia uma corrida.
 
+Tela e modelo removem espaços das bordas, incluindo espaços Unicode como NBSP,
+espaço em e espaço não separável estreito, antes de validar os limites. Um nome
+ou endereço composto somente por esses espaços é rejeitado. Espaços internos
+são preservados. Isso não é validação geográfica nem um filtro de todos os
+caracteres invisíveis (por exemplo, espaço de largura zero não faz parte dessa regra).
+
 `FavoriteStore` armazena até cinco registros com identificador estável em
 SharedPreferences privadas (`favorites`). Não há envio para backend, geocodificador
 ou telemetria. O manifesto desabilita backup e as regras de extração excluem
