@@ -19,6 +19,8 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.util.Collections;
+import java.util.Locale;
 
 /** Pickup details exist only while this screen is in the foreground. */
 public final class PickupActivity extends Activity {
@@ -33,6 +35,9 @@ public final class PickupActivity extends Activity {
     private OfflineReviewSpeaker speaker;
     private AlertDialog confirmation;
     private boolean handoffFailed;
+    private final PrefillSession prefill = new PrefillSession();
+    AddressResolver resolver;
+    private int prefillGeneration;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -44,6 +49,7 @@ public final class PickupActivity extends Activity {
         }
         reader = new PickupLocationReader(this);
         speaker = new OfflineReviewSpeaker(this);
+        resolver = new AndroidAddressResolver(this);
     }
 
     @Override protected void onStart() {
@@ -57,6 +63,8 @@ public final class PickupActivity extends Activity {
         if (reader != null && (session.position() != null || session.state() == PickupSession.State.LOCATING)
                 && !reader.permitted()) {
             reader.cancel();
+            clearPrefill();
+            speaker.stop();
             session.permissionRevoked();
             render();
         }
@@ -68,11 +76,13 @@ public final class PickupActivity extends Activity {
         if (speaker != null) { speaker.stop(); }
         if (confirmation != null) { confirmation.dismiss(); confirmation = null; }
         handoffFailed = false;
+        clearPrefill();
         session.reset();
         super.onStop();
     }
 
     private void useLocation() {
+        clearPrefill();
         reader.cancel();
         session.useLocation(reader.permitted());
         render();
@@ -113,6 +123,7 @@ public final class PickupActivity extends Activity {
     }
 
     private void manual() {
+        clearPrefill();
         reader.cancel();
         session.manual();
         render();
@@ -122,6 +133,7 @@ public final class PickupActivity extends Activity {
         if (!visible || session.state() != PickupSession.State.REVIEW) { return false; }
         if (session.position() != null && !reader.permitted()) { session.permissionRevoked(); }
         if (!session.readyToHandoff()) {
+            clearPrefill();
             speaker.stop();
             render();
             return false;
@@ -131,14 +143,20 @@ public final class PickupActivity extends Activity {
 
     private void confirmUber() {
         if (!canHandoff()) { return; }
+        if (prefill.stage() != PrefillSession.Stage.IDLE && !prefill.confirmed()) { return; }
+        boolean filled = prefill.confirmed();
         speaker.stop();
         if (confirmation != null && confirmation.isShowing()) { return; }
         confirmation = new AlertDialog.Builder(this).setTitle(R.string.confirm_uber_title)
-                .setMessage(R.string.confirm_uber_description)
+                .setMessage(filled ? R.string.confirm_uber_prefilled : R.string.confirm_uber_description)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.open_uber, (dialog, which) -> {
                     if (!canHandoff()) { return; }
-                    if (UberHandoff.open(this)) {
+                    if (filled != prefill.confirmed()) { return; }
+                    boolean opened = filled ? UberHandoff.open(this, prefill.pickup(), prefill.destination())
+                            : UberHandoff.open(this);
+                    if (opened) {
+                        clearPrefill();
                         session.reset();
                         finish();
                     } else {
@@ -151,12 +169,120 @@ public final class PickupActivity extends Activity {
 
     private void readReview() {
         if (!canHandoff()) { return; }
-        speaker.read(getString(R.string.review_spoken, session.address() != null ? session.address()
+        speaker.read(getString(R.string.review_spoken, prefill.confirmed() ? prefill.pickup().label
+                : session.address() != null ? session.address()
                 : getString(R.string.current_pickup), destinationName, destinationAddress,
-                getString(R.string.review_unavailable))
+                getString(prefill.confirmed() ? R.string.review_prefill_ready : R.string.review_unavailable))
+                        + (prefill.confirmed() ? " " + prefill.destination().label : "")
                         + (handoffFailed ? " " + getString(R.string.uber_unavailable) : ""), () -> {
                     if (visible) { Toast.makeText(this, R.string.speech_unavailable, Toast.LENGTH_LONG).show(); }
                 });
+    }
+
+    private void clearPrefill() {
+        prefillGeneration++;
+        if (resolver != null) { resolver.cancel(); }
+        prefill.reset();
+    }
+
+    private void beginPrefill() {
+        if (!canHandoff()) { return; }
+        speaker.stop();
+        clearPrefill();
+        handoffFailed = false;
+        prefill.begin();
+        render();
+    }
+
+    private void searchPickup() {
+        if (!canHandoff() || prefill.stage() != PrefillSession.Stage.CONSENT) { return; }
+        prefill.startPickupSearch();
+        if (session.position() != null) {
+            PickupSession.Position point = session.position();
+            prefill.pickupResults(Collections.singletonList(new ResolvedPlace(point.latitude,
+                    point.longitude, getString(R.string.current_pickup))));
+            render();
+        } else {
+            render();
+            searchAddress(true);
+        }
+    }
+
+    private void searchAddress(boolean pickup) {
+        int request = prefillGeneration;
+        resolver.search(pickup ? session.address() : destinationAddress, values -> {
+            if (!visible || request != prefillGeneration || !canHandoff()) { return; }
+            PrefillSession.Stage expected = pickup ? PrefillSession.Stage.SEARCHING_PICKUP
+                    : PrefillSession.Stage.SEARCHING_DESTINATION;
+            if (prefill.stage() != expected) { return; }
+            if (pickup) { prefill.pickupResults(values); }
+            else { prefill.destinationResults(values); }
+            render();
+        });
+    }
+
+    private void renderPrefill(LinearLayout content) {
+        switch (prefill.stage()) {
+            case IDLE:
+                paragraph(content, getString(R.string.review_unavailable), 18);
+                button(content, R.string.prepare_uber_points, true, this::beginPrefill);
+                break;
+            case CONSENT:
+                paragraph(content, getString(R.string.prefill_consent), 20);
+                button(content, R.string.allow_address_search, true, this::searchPickup);
+                break;
+            case SEARCHING_PICKUP:
+            case SEARCHING_DESTINATION:
+                TextView searching = paragraph(content, getString(R.string.searching_address), 20);
+                searching.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+                break;
+            case PICKUP_CHOICES:
+            case DESTINATION_CHOICES:
+                boolean pickup = prefill.stage() == PrefillSession.Stage.PICKUP_CHOICES;
+                TextView question = paragraph(content,
+                        getString(pickup ? R.string.choose_pickup_point : R.string.choose_destination_point), 22);
+                question.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+                if (android.os.Build.VERSION.SDK_INT >= 28) { question.setAccessibilityHeading(true); }
+                paragraph(content, getString(R.string.confirm_point_warning), 18);
+                for (int index = 0; index < prefill.choices().size(); index++) {
+                    int selected = index;
+                    int generation = prefillGeneration;
+                    ResolvedPlace value = prefill.choices().get(index);
+                    button(content, getString(R.string.choose_resolved_point, value.label,
+                            String.format(Locale.ROOT, "%.6f, %.6f", value.latitude, value.longitude)), false, () -> {
+                        if (!canHandoff()) { return; }
+                        if (generation != prefillGeneration || prefill.stage() != (pickup
+                                ? PrefillSession.Stage.PICKUP_CHOICES : PrefillSession.Stage.DESTINATION_CHOICES)) { return; }
+                        if (pickup) {
+                            prefill.choosePickup(selected);
+                            render();
+                            searchAddress(false);
+                        } else {
+                            prefill.chooseDestination(selected);
+                            render();
+                        }
+                    });
+                }
+                break;
+            case READY:
+                paragraph(content, getString(R.string.review_prefill_ready), 18);
+                paragraph(content, getString(R.string.confirmed_point, getString(R.string.pickup_label), prefill.pickup().label), 20);
+                paragraph(content, getString(R.string.confirmed_point, getString(R.string.destination_label), prefill.destination().label), 20);
+                button(content, R.string.prepare_uber_points, false, this::beginPrefill);
+                break;
+            case FAILED:
+                TextView failure = paragraph(content, getString(R.string.address_search_failed), 20);
+                failure.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+                button(content, R.string.retry_address_search, true, this::beginPrefill);
+                break;
+        }
+        if (prefill.stage() != PrefillSession.Stage.IDLE) {
+            button(content, R.string.prefill_manual_fallback, false, () -> {
+                clearPrefill();
+                render();
+                confirmUber();
+            });
+        }
     }
 
     private void render() {
@@ -223,8 +349,8 @@ public final class PickupActivity extends Activity {
                 label.setLabelFor(address.getId());
                 content.addView(address, fullWidth());
                 button(content, R.string.review_trip, true, () -> {
-                    String value = address.getText().toString();
-                    if (value.trim().isEmpty()) {
+                    String value = FavoriteDestination.normalizeText(address.getText().toString());
+                    if (value.isEmpty()) {
                         address.setError(getString(R.string.address_error));
                         address.requestFocus();
                         return;
@@ -253,17 +379,20 @@ public final class PickupActivity extends Activity {
                         : getString(R.string.current_pickup), 20);
                 paragraph(content, getString(R.string.destination_label), 22);
                 paragraph(content, destinationName + "\n" + destinationAddress, 20);
-                paragraph(content, getString(R.string.review_unavailable), 18);
+                renderPrefill(content);
                 if (handoffFailed) {
                     TextView handoffError = paragraph(content, getString(R.string.uber_unavailable), 20);
                     handoffError.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
                 }
-                button(content, R.string.listen_review, false, this::readReview);
-                button(content, R.string.stop_reading, false, speaker::stop);
-                button(content, R.string.continue_uber, true, this::confirmUber);
+                if (prefill.stage() == PrefillSession.Stage.IDLE || prefill.confirmed()) {
+                    button(content, R.string.listen_review, false, this::readReview);
+                    button(content, R.string.stop_reading, false, speaker::stop);
+                    button(content, R.string.continue_uber, prefill.confirmed(), this::confirmUber);
+                }
                 if (session.address() != null) {
                     button(content, R.string.edit_pickup_address, false, () -> {
                         speaker.stop();
+                        clearPrefill();
                         handoffFailed = false;
                         session.editManual();
                         render();
@@ -271,6 +400,7 @@ public final class PickupActivity extends Activity {
                 }
                 button(content, R.string.change_pickup, false, () -> {
                     speaker.stop();
+                    clearPrefill();
                     handoffFailed = false;
                     reader.cancel();
                     session.reset();
@@ -280,6 +410,7 @@ public final class PickupActivity extends Activity {
         }
         button(content, R.string.finish_pickup, false, () -> {
             reader.cancel();
+            clearPrefill();
             session.reset();
             finish();
         });
@@ -306,6 +437,10 @@ public final class PickupActivity extends Activity {
     }
 
     private void button(LinearLayout content, int label, boolean primary, Runnable action) {
+        button(content, getString(label), primary, action);
+    }
+
+    private void button(LinearLayout content, String label, boolean primary, Runnable action) {
         Button button = new Button(this);
         button.setText(label);
         button.setTextSize(20);
