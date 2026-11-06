@@ -6,10 +6,11 @@ explícita antes de tentar abrir o aplicativo.
 
 ## Limite desta entrega
 
-O link abre o fluxo oficial, mas não preenche origem ou destino. A interface
-explica essa limitação antes da confirmação. Os favoritos atuais ainda não
-possuem coordenadas confirmadas. Não há geocodificação, cópia para a área de
-transferência ou envio de endereços no Intent.
+Sem pontos escolhidos, o link abre o fluxo oficial sem preencher origem ou destino.
+A [busca opcional de pontos](geocoding.md) permite tentar preencher ambos após
+consentimento, escolha de cada resultado e confirmação final. Não há cópia para
+a área de transferência. O preenchimento real depende da versão instalada do Uber
+e continua pendente de [validação física](uber-physical-validation.md).
 
 O [ADR 0003](../architecture/adr/0003-explicit-uber-handoff.md) registra essa
 etapa e a dependência para preenchimento automático. O spike #3 e a issue #7
@@ -32,6 +33,7 @@ de tráfego de um mecanismo de terceiros pelo aplicativo.
 ## Abertura e retorno
 
 O Intent usa `ACTION_VIEW`, `uber://riderequest` e o pacote `com.ubercab`.
+No modo opcional, coordenadas e descrições escolhidas são codificadas na URI.
 Não há consulta de disponibilidade prévia: a tentativa de abertura trata
 `ActivityNotFoundException` e `SecurityException`. Se falhar, a pessoa continua
 na revisão com uma mensagem e pode tentar novamente ou voltar ao destino.

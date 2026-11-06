@@ -23,7 +23,7 @@ O cliente Android oferece uma tela inicial com até cinco destinos favoritos loc
 
 Se os favoritos locais não puderem ser lidos, o aplicativo permite tentar novamente ou apagar os dados dos lugares e recomeçar com confirmação explícita. Nenhum dado é apagado automaticamente.
 
-A base Android e os favoritos já estão integrados à `main`. O [fluxo de embarque](docs/android/pickup.md) oferece localização com consentimento ou endereço manual e revisão da viagem. A [abertura do Uber](docs/android/uber-handoff.md) exige confirmação e oferece resumo falado com voz local, quando disponível. Os endereços ainda devem ser preenchidos no Uber. TalkBack, teste com pessoas usuárias e preenchimento automático validado em aparelho físico permanecem pendentes.
+A base Android e os favoritos já estão integrados à `main`. O [fluxo de embarque](docs/android/pickup.md) oferece localização com consentimento ou endereço manual e revisão da viagem. A [abertura do Uber](docs/android/uber-handoff.md) exige confirmação e oferece resumo falado com voz local, quando disponível. A [busca opcional de pontos](docs/android/geocoding.md) pede consentimento e escolha dos dois resultados antes de tentar preencher a viagem no Uber; também permite continuar sem dados de viagem. Geocodificação real, preenchimento no aparelho físico, TalkBack e testes com pessoas permanecem pendentes. Esta etapa é experimental, não um MVP liberado para uso real.
 
 ## Tecnologias
 
