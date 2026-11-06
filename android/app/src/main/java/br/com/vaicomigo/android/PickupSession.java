@@ -82,10 +82,11 @@ public final class PickupSession {
     }
 
     public void reviewManual(String value) {
-        if (state != State.MANUAL || value == null || value.trim().isEmpty() || value.trim().length() > 240) {
+        String normalized = FavoriteDestination.normalizeText(value);
+        if (state != State.MANUAL || normalized.isEmpty() || normalized.length() > 240) {
             throw new IllegalArgumentException("Invalid pickup address");
         }
-        address = value.trim();
+        address = normalized;
         state = State.REVIEW;
     }
 
