@@ -41,6 +41,12 @@ interface é limitada a 30 segundos por endereço. Cancelar/timeout invalida os
 callbacks; não garante interrupção da consulta remota nem desfaz dados já enviados.
 Exceções e mensagens do fornecedor não são registradas.
 
+O prazo é conferido também no momento de entregar a resposta à interface, com
+relógio monotônico. Se a fila principal estiver ocupada, um resultado enfileirado
+não ganha tempo extra: no instante do limite ou depois dele, a resposta vira
+indisponibilidade. Isso não torna a interface responsiva durante um bloqueio da
+thread principal; impede aceitar sugestões vencidas quando ela voltar a responder.
+
 ## Privacidade e alternativas
 
 Pontos e resultados existem somente em memória nesta preparação. Não são salvos
@@ -63,6 +69,17 @@ somente respostas fictícias: cobre consentimento, alternativas, callbacks
 atrasados, recriação, correção e URI final. Sucessos de abertura são interceptados;
 nenhuma corrida real é solicitada. Esses testes não comprovam geocodificação
 real nem comportamento da versão instalada do Uber.
+
+`AndroidAddressResolverTest` exercita o adaptador real de Handler com fornecedor
+fictício: prazo exato, atraso de despacho, relógio regressivo, timeout local,
+cancelamento, respostas duplicadas/antigas, erros, consulta inválida e filtro de
+registros incompletos. Não acessa Geocoder, rede ou dados reais. O relógio injetado
+torna as fronteiras do prazo determinísticas; o teste do timer aguarda um sinal
+com limite de cinco segundos, sem pausas arbitrárias.
+
+```bash
+./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=br.com.vaicomigo.android.AndroidAddressResolverTest
+```
 
 Antes de piloto, seguir [o roteiro físico](uber-physical-validation.md), registrar
 o aparelho/versões e testar TalkBack, fonte em 200%, falhas e retorno ao app.

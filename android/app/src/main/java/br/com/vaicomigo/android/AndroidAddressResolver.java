@@ -6,21 +6,26 @@ import android.location.Geocoder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 
 /** Main-thread results, bounded waiting, no logs. Cancellation cannot recall server data. */
 final class AndroidAddressResolver implements AddressResolver {
     private final AddressResolver backend;
     private final Handler handler;
     private final long timeoutMillis;
+    private final LongSupplier clock;
+    private long startedAtMillis;
     private volatile int generation;
     private Callback callback;
 
@@ -29,8 +34,14 @@ final class AndroidAddressResolver implements AddressResolver {
     }
 
     AndroidAddressResolver(AddressResolver backend, Handler handler, long timeoutMillis) {
-        this.backend = backend;
-        this.handler = handler;
+        this(backend, handler, timeoutMillis, SystemClock::elapsedRealtime);
+    }
+
+    AndroidAddressResolver(AddressResolver backend, Handler handler, long timeoutMillis, LongSupplier clock) {
+        if (timeoutMillis <= 0) { throw new IllegalArgumentException("Positive lookup timeout required"); }
+        this.backend = Objects.requireNonNull(backend);
+        this.handler = Objects.requireNonNull(handler);
+        this.clock = Objects.requireNonNull(clock);
         this.timeoutMillis = timeoutMillis;
     }
 
@@ -38,12 +49,13 @@ final class AndroidAddressResolver implements AddressResolver {
         cancel();
         int request = generation;
         this.callback = callback;
+        startedAtMillis = clock.getAsLong();
         String query = FavoriteDestination.normalizeText(address);
         if (query.isEmpty() || query.length() > 240) {
             deliver(request, Collections.emptyList());
             return;
         }
-        handler.postDelayed(() -> deliver(request, Collections.emptyList()), timeoutMillis);
+        handler.postDelayed(() -> finish(request, Collections.emptyList()), timeoutMillis);
         try {
             backend.search(query, values -> deliver(request, values));
         } catch (RuntimeException exception) {
@@ -53,17 +65,23 @@ final class AndroidAddressResolver implements AddressResolver {
 
     private void deliver(int request, List<ResolvedPlace> values) {
         if (request != generation) { return; }
-        handler.post(() -> {
-            if (request != generation || callback == null) { return; }
-            Callback current = callback;
-            cancel();
-            current.completed(values == null ? Collections.emptyList() : values);
-        });
+        handler.post(() -> finish(request, values));
+    }
+
+    /** Main thread only. Queue ordering must not extend the response deadline. */
+    private void finish(int request, List<ResolvedPlace> values) {
+        if (request != generation || callback == null) { return; }
+        long elapsedMillis = clock.getAsLong() - startedAtMillis;
+        boolean expired = elapsedMillis < 0 || elapsedMillis >= timeoutMillis;
+        Callback current = callback;
+        cancel();
+        current.completed(expired || values == null ? Collections.emptyList() : values);
     }
 
     @Override public void cancel() {
         generation++;
         callback = null;
+        startedAtMillis = 0;
         handler.removeCallbacksAndMessages(null);
         backend.cancel();
     }
