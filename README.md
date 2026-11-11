@@ -17,6 +17,10 @@ O Vai Comigo reduz a carga de pedir uma corrida sem retirar da pessoa passageira
 
 ## Estado atual
 
+Uma versão Android de demonstração está identificada como `0.1.0-demo.1`.
+Veja [como obter o APK, instalar e demonstrar com segurança](docs/android/demo.md).
+O pacote é debug e não funciona no iPhone. Não é uma liberação para uso real.
+
 O repositório contém a fundação do backend e a documentação inicial do produto. Nenhuma corrida real é solicitada neste estágio.
 
 O cliente Android oferece uma tela inicial com até cinco destinos favoritos locais, cadastro, edição, exclusão com confirmação e telas de Ajuda e Configurações. Veja [como compilar e testar o aplicativo](docs/android/development.md).

@@ -62,3 +62,17 @@ jobs:
           arch: x86_64
           working-directory: android
           script: ./gradlew --no-daemon connectedDebugAndroidTest
+      - name: Generate demo APK checksum
+        working-directory: android/app/build/outputs/apk/debug
+        run: sha256sum app-debug.apk > app-debug.apk.sha256
+      - name: Upload tested Android demo
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: vai-comigo-demo-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256
+            docs/android/demo.md
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

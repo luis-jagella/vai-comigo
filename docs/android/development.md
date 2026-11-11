@@ -27,6 +27,11 @@ cd android
 No Windows, use `gradlew.bat`. O APK fica em
 `android/app/build/outputs/apk/debug/app-debug.apk`.
 
+O debug é identificado como **Vai Comigo (teste)**, versão `0.1.0-demo.1`.
+O CI disponibiliza APK e SHA-256 após os testes Android. Veja o
+[guia da demonstração](demo.md) para download, instalação, cuidados com chaves
+debug e roteiro seguro. Essa entrega não encerra a validação física do MVP.
+
 ## Testes de navegação
 
 Com um emulador ou aparelho conectado por ADB:
