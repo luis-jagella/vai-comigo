@@ -66,7 +66,7 @@ jobs:
         working-directory: android/app/build/outputs/apk/debug
         run: sha256sum app-debug.apk > app-debug.apk.sha256
       - name: Upload tested Android demo
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: vai-comigo-demo-${{ github.sha }}
           path: |
