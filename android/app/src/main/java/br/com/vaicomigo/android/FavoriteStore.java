@@ -30,7 +30,7 @@ public final class FavoriteStore {
             for (int index = 0; index < values.length(); index++) {
                 JSONObject item = values.getJSONObject(index);
                 FavoriteDestination destination = new FavoriteDestination(
-                        item.getString("id"), item.getString("name"), item.getString("address"));
+                        stringField(item, "id"), stringField(item, "name"), stringField(item, "address"));
                 for (FavoriteDestination existing : result) {
                     if (existing.id.equals(destination.id)) {
                         throw new IllegalStateException("Duplicate favorite identity");
@@ -42,6 +42,14 @@ public final class FavoriteStore {
         } catch (JSONException | IllegalArgumentException | ClassCastException exception) {
             throw new IllegalStateException("Unable to read favorites", exception);
         }
+    }
+
+    private static String stringField(JSONObject item, String key) throws JSONException {
+        Object value = item.get(key);
+        if (!(value instanceof String)) {
+            throw new IllegalArgumentException("Invalid favorite field type");
+        }
+        return (String) value;
     }
 
     public void save(FavoriteDestination destination) {
