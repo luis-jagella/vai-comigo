@@ -87,6 +87,19 @@ sobrescritos silenciosamente, inclusive quando a preferência tem um tipo
 incorreto. **Tentar ler meus lugares novamente** repete a leitura sem alterar
 o conteúdo. A Ajuda continua disponível nessa tela.
 
+Cada item do JSON local exige `id`, `name` e `address` como strings. Números,
+booleanos, `null`, objetos, listas e campos ausentes são rejeitados, em vez de
+convertidos em texto. Textos como `"42"` e `"null"` continuam sendo strings
+válidas quando atendem às regras do modelo. O formato dos registros válidos
+não mudou e não exige migração. Identidades duplicadas e coleções com mais de
+cinco lugares também são consideradas ilegíveis.
+
+Uma coleção ilegível bloqueia leitura, cadastro, edição e remoção individual,
+sem sobrescrever o conteúdo original ou alterar outras preferências. Não há
+recuperação parcial automática: a ação de apagar os lugares continua exigindo
+a confirmação descrita abaixo. Isso valida estrutura e campos locais, não a
+existência geográfica de um endereço.
+
 Se o problema persistir, **Apagar dados dos lugares e recomeçar** oferece uma
 saída destrutiva com confirmação explícita: todos os lugares antigos serão
 perdidos, sem desfazer ou recuperação parcial. Cancelar, sair ou recriar a
@@ -115,3 +128,15 @@ após tipo incorreto, novo cadastro e proteção de dados que voltaram a ser leg
 que uma coleção válida ou vazia não pode ser descartada por essa operação.
 Não provoque corrupção em um aparelho que contenha favoritos reais. Falhas
 reais de escrita em disco e leitura com TalkBack ainda exigem validação específica.
+
+`FavoriteStoreSchemaTest` usa uma preferência exclusiva de teste para verificar
+os tipos de cada campo, campos ausentes, duplicidade, limite da coleção e
+recuperação explícita. Confere que carregar, salvar e remover não sobrescrevem
+uma coleção inválida. Para executar somente essa regressão em um emulador:
+
+```powershell
+cd android
+.\gradlew.bat --no-daemon connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=br.com.vaicomigo.android.FavoriteStoreSchemaTest"
+```
+
+Os dados desses testes são sintéticos. Não injete corrupção nos favoritos reais.
