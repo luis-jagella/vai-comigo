@@ -36,7 +36,7 @@ Idade exata, diagnóstico médico e renda não são necessários para responder 
 - entrevista semiestruturada de 30 a 45 minutos;
 - demonstração opcional da jornada atual em ambiente seguro, sem solicitar corrida real;
 - uma pessoa facilita e outra toma notas quando possível;
-- gravação desativada por padrão;
+- sem gravação de áudio ou vídeo nesta rodada, conforme o roteiro de consentimento;
 - protótipos devem usar nomes e endereços fictícios.
 
 ## Sequência

@@ -17,7 +17,7 @@ Use esta lista no dia da conversa. Ela complementa o [roteiro de entrevista](int
 - [ ] Confirmar que a pessoa pode pular perguntas ou encerrar a conversa sem justificativa.
 - [ ] Informar que não serão pedidos endereço, telefone, senha, cartão, documentos ou dados de corrida real.
 - [ ] Perguntar se a pessoa autoriza notas anonimizadas.
-- [ ] Perguntar separadamente se a pessoa autoriza gravação de áudio, caso ela seja necessária.
+- [ ] Confirmar que áudio e vídeo não serão gravados nesta rodada, conforme o consentimento e o plano de pesquisa.
 - [ ] Registrar apenas a resposta de consentimento e restrições solicitadas, fora do repositório público.
 
 ## Durante a conversa
@@ -35,7 +35,7 @@ Use esta lista no dia da conversa. Ela complementa o [roteiro de entrevista](int
 - [ ] Perguntar: “Tem algo importante que eu não perguntei?”
 - [ ] Confirmar se há alguma observação que a pessoa quer retirar.
 - [ ] Agradecer e explicar que as sugestões serão analisadas, sem prometer implementação.
-- [ ] Se houver áudio, guardar em local privado e separado das notas de contato.
+- [ ] Não produzir gravação; caso ela seja proposta para uma rodada futura, revisar antes plano, consentimento separado e política de retenção.
 - [ ] Revisar as notas e remover qualquer identificador antes da síntese.
 
 ## Após a conversa
@@ -44,4 +44,4 @@ Use esta lista no dia da conversa. Ela complementa o [roteiro de entrevista](int
 - [ ] Atualizar a [síntese da rodada](synthesis-template.md) somente com padrões anonimizados.
 - [ ] Relacionar cada achado a uma hipótese ou decisão de produto.
 - [ ] Registrar incertezas e opiniões divergentes; uma conversa isolada não é conclusão definitiva.
-- [ ] Apagar notas brutas e gravações conforme a política de [tratamento de dados](data-handling.md).
+- [ ] Apagar notas brutas conforme a política de [tratamento de dados](data-handling.md).

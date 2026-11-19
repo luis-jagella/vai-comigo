@@ -15,6 +15,8 @@ Entender como as pessoas solicitam transporte hoje, onde sentem insegurança e q
 5. [Template de notas](session-notes-template.md)
 6. [Template de síntese](synthesis-template.md)
 7. [Tratamento dos dados de pesquisa](data-handling.md)
+8. [Checklist de execução](interview-execution-checklist.md)
+9. [Como transformar entrevistas em próximos passos](after-interview-guide.md)
 
 ## Regra de ouro
 
