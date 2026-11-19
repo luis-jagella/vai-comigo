@@ -12,6 +12,7 @@ O Vai Comigo reduz a carga de pedir uma corrida sem retirar da pessoa passageira
 - [Glossário](docs/product/glossary.md)
 - [Critérios de aceite do MVP](docs/product/mvp-acceptance-criteria.md)
 - [Roadmap do MVP](docs/product/roadmap.md)
+- [Kit de pesquisa com usuários](docs/research/README.md)
 - [Como transformar entrevistas em próximos passos](docs/research/after-interview-guide.md)
 - [Arquitetura inicial](docs/architecture/adr/0001-modular-monolith.md)
 
