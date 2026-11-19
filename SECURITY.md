@@ -1,5 +1,7 @@
 # Política de segurança
 
+Os riscos e dados previstos para o MVP estão documentados no [modelo de ameaças](docs/security/threat-model.md) e no [inventário inicial de dados](docs/security/data-inventory.md).
+
 ## Reportar uma vulnerabilidade
 
 Não publique vulnerabilidades, credenciais ou dados pessoais em issues públicas. Utilize o recurso **Private vulnerability reporting** do GitHub quando estiver habilitado no repositório.

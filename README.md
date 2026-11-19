@@ -1,34 +1,42 @@
-# Vai Comigo
+# Vai Comigo 🛟
 
 Mobilidade assistida e acessível para pessoas idosas, com apoio de familiares.
 
-> O projeto está em descoberta. O primeiro objetivo é validar uma experiência simples e segura antes de integrar solicitações reais de corrida.
+> O projeto está em descoberta. A primeira meta é validar uma experiência simples e segura antes de integrar solicitações reais de corrida.
 
-## Problema
+## Produto
 
-Aplicativos de mobilidade podem gerar insegurança em pessoas idosas por exigirem várias decisões, permissões e confirmações em uma interface pouco familiar. O Vai Comigo pretende reduzir essa carga sem retirar a autonomia da pessoa passageira.
+O Vai Comigo reduz a carga de pedir uma corrida sem retirar da pessoa passageira a decisão final. A primeira versão simplifica destinos conhecidos, explica claramente o próximo passo e encaminha para o aplicativo oficial de mobilidade.
 
-## Primeira hipótese de produto
-
-- destinos favoritos apresentados em botões grandes;
-- origem obtida da localização atual;
-- familiar autorizado pode preparar uma viagem;
-- pessoa passageira revisa e confirma a ação;
-- abertura do aplicativo oficial de mobilidade por deep link;
-- orientações simples para conferir motorista, veículo e placa.
-
-O produto não armazenará senha nem dados de pagamento do serviço de mobilidade.
+- [Visão do produto](docs/product/vision.md)
+- [Glossário](docs/product/glossary.md)
+- [Critérios de aceite do MVP](docs/product/mvp-acceptance-criteria.md)
+- [Roadmap do MVP](docs/product/roadmap.md)
+- [Kit de pesquisa com usuários](docs/research/README.md)
+- [Como transformar entrevistas em próximos passos](docs/research/after-interview-guide.md)
+- [Arquitetura inicial](docs/architecture/adr/0001-modular-monolith.md)
 
 ## Estado atual
 
+Uma versão Android de demonstração está identificada como `0.1.0-demo.1`.
+Veja [como obter o APK, instalar e demonstrar com segurança](docs/android/demo.md).
+O pacote é debug e não funciona no iPhone. Não é uma liberação para uso real.
+
 O repositório contém a fundação do backend e a documentação inicial do produto. Nenhuma corrida real é solicitada neste estágio.
+
+O cliente Android oferece uma tela inicial com até cinco destinos favoritos locais, cadastro, edição, exclusão com confirmação e telas de Ajuda e Configurações. Veja [como compilar e testar o aplicativo](docs/android/development.md).
+
+Se os favoritos locais não puderem ser lidos, o aplicativo permite tentar novamente ou apagar os dados dos lugares e recomeçar com confirmação explícita. Nenhum dado é apagado automaticamente.
+
+A base Android e os favoritos já estão integrados à `main`. O [fluxo de embarque](docs/android/pickup.md) oferece localização com consentimento ou endereço manual e revisão da viagem. A [abertura do Uber](docs/android/uber-handoff.md) exige confirmação e oferece resumo falado com voz local, quando disponível. A [busca opcional de pontos](docs/android/geocoding.md) pede consentimento e escolha dos dois resultados antes de tentar preencher a viagem no Uber; também permite continuar sem dados de viagem. Geocodificação real, preenchimento no aparelho físico, TalkBack e testes com pessoas permanecem pendentes. Esta etapa é experimental, não um MVP liberado para uso real.
 
 ## Tecnologias
 
 - Java 17
 - Spring Boot 4.1
 - Maven
-- JUnit 5
+- Android SDK 36 e Gradle 8.14 (cliente Android em Java)
+- JUnit 5 (backend) e AndroidX Test/Espresso (Android)
 - GitHub Actions
 
 ## Executar localmente
@@ -51,15 +59,20 @@ curl http://localhost:8080/api/v1/status
 ./mvnw verify
 ```
 
-## Documentação
+Para compilar e verificar o Android, configure o SDK conforme o [guia de desenvolvimento](docs/android/development.md) e execute:
 
-- [Visão do produto](docs/product/vision.md)
-- [Roadmap do MVP](docs/product/roadmap.md)
-- [Kit de pesquisa com usuários](docs/research/README.md)
-- [Arquitetura inicial](docs/architecture/adr/0001-modular-monolith.md)
+```bash
+cd android
+./gradlew assembleDebug lintDebug testDebugUnitTest
+```
+
+No Windows, use `gradlew.bat`. Para os testes de interface, execute `connectedDebugAndroidTest` com um emulador ou aparelho conectado.
+
+## Contribuição e segurança
+
 - [Como contribuir](CONTRIBUTING.md)
 - [Política de segurança](SECURITY.md)
 
 ## Aviso importante
 
-Este software ainda não deve ser utilizado como mecanismo de emergência ou como substituto dos recursos de segurança dos aplicativos oficiais de mobilidade.
+Este software não deve ser usado como mecanismo de emergência ou como substituto dos recursos de segurança dos aplicativos oficiais de mobilidade.

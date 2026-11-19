@@ -1,4 +1,9 @@
 target/
+output/
+tmp/
+**/.gradle/
+**/build/
+**/local.properties
 .idea/
 .vscode/
 *.iml
