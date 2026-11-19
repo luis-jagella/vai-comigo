@@ -1,4 +1,4 @@
-# Vai Comigo
+# Vai Comigo 🛟
 
 Mobilidade assistida e acessível para pessoas idosas, com apoio de familiares.
 
@@ -17,14 +17,25 @@ O Vai Comigo reduz a carga de pedir uma corrida sem retirar da pessoa passageira
 
 ## Estado atual
 
+Uma versão Android de demonstração está identificada como `0.1.0-demo.1`.
+Veja [como obter o APK, instalar e demonstrar com segurança](docs/android/demo.md).
+O pacote é debug e não funciona no iPhone. Não é uma liberação para uso real.
+
 O repositório contém a fundação do backend e a documentação inicial do produto. Nenhuma corrida real é solicitada neste estágio.
+
+O cliente Android oferece uma tela inicial com até cinco destinos favoritos locais, cadastro, edição, exclusão com confirmação e telas de Ajuda e Configurações. Veja [como compilar e testar o aplicativo](docs/android/development.md).
+
+Se os favoritos locais não puderem ser lidos, o aplicativo permite tentar novamente ou apagar os dados dos lugares e recomeçar com confirmação explícita. Nenhum dado é apagado automaticamente.
+
+A base Android e os favoritos já estão integrados à `main`. O [fluxo de embarque](docs/android/pickup.md) oferece localização com consentimento ou endereço manual e revisão da viagem. A [abertura do Uber](docs/android/uber-handoff.md) exige confirmação e oferece resumo falado com voz local, quando disponível. A [busca opcional de pontos](docs/android/geocoding.md) pede consentimento e escolha dos dois resultados antes de tentar preencher a viagem no Uber; também permite continuar sem dados de viagem. Geocodificação real, preenchimento no aparelho físico, TalkBack e testes com pessoas permanecem pendentes. Esta etapa é experimental, não um MVP liberado para uso real.
 
 ## Tecnologias
 
 - Java 17
 - Spring Boot 4.1
 - Maven
-- JUnit 5
+- Android SDK 36 e Gradle 8.14 (cliente Android em Java)
+- JUnit 5 (backend) e AndroidX Test/Espresso (Android)
 - GitHub Actions
 
 ## Executar localmente
@@ -46,6 +57,15 @@ curl http://localhost:8080/api/v1/status
 ```bash
 ./mvnw verify
 ```
+
+Para compilar e verificar o Android, configure o SDK conforme o [guia de desenvolvimento](docs/android/development.md) e execute:
+
+```bash
+cd android
+./gradlew assembleDebug lintDebug testDebugUnitTest
+```
+
+No Windows, use `gradlew.bat`. Para os testes de interface, execute `connectedDebugAndroidTest` com um emulador ou aparelho conectado.
 
 ## Contribuição e segurança
 

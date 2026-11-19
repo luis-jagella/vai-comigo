@@ -1,0 +1,56 @@
+name: Spike técnico
+description: Investigar uma incerteza técnica antes de assumir uma solução no produto.
+title: "[Spike]: "
+labels: ["type: research", "status: triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use este template para registrar uma dúvida técnica e a evidência necessária para resolvê-la. Não inclua tokens, dados pessoais, endereços reais ou dados de corrida.
+  - type: textarea
+    id: question
+    attributes:
+      label: Pergunta a responder
+      description: Qual decisão técnica esta investigação precisa permitir?
+      placeholder: "Ex.: O deep link abre o Uber com origem e destino em um Android físico?"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Escopo e hipótese
+      description: O que será testado e qual é a hipótese inicial?
+    validations:
+      required: true
+  - type: textarea
+    id: scenarios
+    attributes:
+      label: Cenários de validação
+      description: Liste cenários observáveis, incluindo falhas e fallback.
+      placeholder: |
+        - [ ] Cenário principal
+        - [ ] Serviço ou aplicativo ausente
+        - [ ] Permissão negada ou dado indisponível
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidência esperada
+      description: Que teste, log seguro, captura anonimizada ou documentação oficial comprova o resultado?
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Riscos de privacidade, segurança e acessibilidade
+      description: Que danos podem ocorrer e como o teste evita dados reais ou ações irreversíveis?
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decisão ao encerrar
+      description: Qual decisão será registrada se a hipótese for confirmada, refutada ou inconclusiva?
+    validations:
+      required: true

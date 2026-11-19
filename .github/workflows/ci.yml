@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
@@ -27,3 +26,53 @@ jobs:
 
       - name: Verify
         run: ./mvnw --batch-mode --no-transfer-progress verify
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - name: Install SDK packages
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Build and lint
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug lintDebug testDebugUnitTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Test navigation on Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          working-directory: android
+          script: ./gradlew --no-daemon connectedDebugAndroidTest
+      - name: Generate demo APK checksum
+        working-directory: android/app/build/outputs/apk/debug
+        run: sha256sum app-debug.apk > app-debug.apk.sha256
+      - name: Upload tested Android demo
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: vai-comigo-demo-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256
+            docs/android/demo.md
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

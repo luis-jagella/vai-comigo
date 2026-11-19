@@ -1,0 +1,255 @@
+package br.com.vaicomigo.android;
+
+import static org.junit.Assert.*;
+import org.junit.Test;
+import java.util.concurrent.atomic.AtomicLong;
+
+public class PickupSessionTest {
+    private static final double LATITUDE = -23.55, LONGITUDE = -46.63;
+
+    @Test public void startsWithoutRequestingLocation() {
+        PickupSession session = new PickupSession();
+        assertEquals(PickupSession.State.EXPLANATION, session.state());
+        assertNull(session.position());
+    }
+
+    @Test public void permissionIsRequestedOnlyAfterExplicitChoice() {
+        PickupSession session = new PickupSession();
+        session.useLocation(false);
+        assertEquals(PickupSession.State.PERMISSION, session.state());
+        session.permissionResult(true);
+        assertEquals(PickupSession.State.LOCATING, session.state());
+        session.located(LATITUDE, LONGITUDE, 12, 1_000);
+        session.reviewLocation();
+        assertEquals(PickupSession.State.REVIEW, session.state());
+        assertEquals(LATITUDE, session.position().latitude, 0);
+    }
+
+    @Test public void denialStillAllowsManualReview() {
+        PickupSession session = new PickupSession();
+        session.useLocation(false);
+        session.permissionResult(false);
+        assertEquals(PickupSession.State.DENIED, session.state());
+        session.manual();
+        session.reviewManual(" Rua Fictícia, 123, Cidade Exemplo ");
+        assertEquals("Rua Fictícia, 123, Cidade Exemplo", session.address());
+        assertEquals(PickupSession.State.REVIEW, session.state());
+        assertNull(session.position());
+    }
+
+    @Test public void alreadyGrantedPermissionStillRequiresUserChoice() {
+        PickupSession session = new PickupSession();
+        session.permissionResult(true);
+        assertEquals(PickupSession.State.EXPLANATION, session.state());
+        session.useLocation(true);
+        assertEquals(PickupSession.State.LOCATING, session.state());
+    }
+
+    @Test public void revocationErasesPreviouslyReviewedPosition() {
+        PickupSession session = locatedSession();
+        session.reviewLocation();
+        session.permissionRevoked();
+        assertNull(session.position());
+        assertEquals(PickupSession.State.DENIED, session.state());
+        assertThrows(IllegalStateException.class, session::reviewLocation);
+    }
+
+    @Test public void latePositionAfterCancellationIsIgnored() {
+        PickupSession session = new PickupSession();
+        session.useLocation(true);
+        session.reset();
+        session.located(LATITUDE, LONGITUDE, 10, 0);
+        assertNull(session.position());
+        assertEquals(PickupSession.State.EXPLANATION, session.state());
+    }
+
+    @Test public void switchingToManualErasesCoordinatesAndIgnoresLateCallbacks() {
+        PickupSession session = locatedSession();
+        session.manual();
+        session.located(LATITUDE, LONGITUDE, 10, 0);
+        session.unavailable();
+        assertNull(session.position());
+        assertEquals(PickupSession.State.MANUAL, session.state());
+    }
+
+    @Test public void leavingFlowAlsoErasesManualAddress() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        session.reviewManual("Rua Fictícia, 123");
+        session.reset();
+        assertNull(session.address());
+        assertNull(session.position());
+    }
+
+    @Test public void staleInaccurateAndInvalidPositionsCannotBecomePickup() {
+        assertFalse(PickupSession.usable(LATITUDE, LONGITUDE, 10, 120_001));
+        assertFalse(PickupSession.usable(LATITUDE, LONGITUDE, 101, 0));
+        assertFalse(PickupSession.usable(LATITUDE, LONGITUDE, 0, 0));
+        assertFalse(PickupSession.usable(LATITUDE, LONGITUDE, Float.NaN, 0));
+        assertFalse(PickupSession.usable(Double.NaN, LONGITUDE, 10, 0));
+        assertFalse(PickupSession.usable(91, LONGITUDE, 10, 0));
+        assertFalse(PickupSession.usable(LATITUDE, 181, 10, 0));
+        assertFalse(PickupSession.usable(LATITUDE, LONGITUDE, 10, -1));
+        assertTrue(PickupSession.usable(LATITUDE, LONGITUDE, 100, 120_000));
+        PickupSession session = new PickupSession();
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 800, 0);
+        assertNull(session.position());
+        session.located(LATITUDE, LONGITUDE, 10, 1_000);
+        assertNotNull(session.position());
+    }
+
+    @Test public void timeoutOffersAlternativeWithoutCoordinates() {
+        PickupSession session = new PickupSession();
+        session.useLocation(true);
+        session.unavailable();
+        assertEquals(PickupSession.State.UNAVAILABLE, session.state());
+        assertNull(session.position());
+        session.manual();
+        session.reviewManual("Praça Fictícia, 10");
+        assertNotNull(session.address());
+    }
+
+    @Test public void emptyOrOversizedManualAddressCannotBeReviewed() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        assertThrows(IllegalArgumentException.class, () -> session.reviewManual(" "));
+        assertThrows(IllegalArgumentException.class, () -> session.reviewManual(new String(new char[241]).replace('\0', 'x')));
+        assertEquals(PickupSession.State.MANUAL, session.state());
+    }
+
+    @Test public void reviewRejectsPositionThatExpiredWhileUserWasWaiting() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 90_000);
+        clock.addAndGet(30_001);
+
+        assertFalse(session.reviewLocation());
+        assertEquals(PickupSession.State.UNAVAILABLE, session.state());
+        assertNull(session.position());
+        session.manual();
+        session.reviewManual("Rua Fictícia, 123");
+        assertEquals(PickupSession.State.REVIEW, session.state());
+    }
+
+    @Test public void reviewAllowsPositionAtExactFreshnessBoundary() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 90_000);
+        clock.addAndGet(30_000);
+
+        assertTrue(session.reviewLocation());
+        assertEquals(PickupSession.State.REVIEW, session.state());
+        assertNotNull(session.position());
+    }
+
+    @Test public void retryUsesNewPositionAgeInsteadOfPreviousDeadline() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 119_000);
+        clock.addAndGet(2_000);
+        assertFalse(session.reviewLocation());
+
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 0);
+        clock.addAndGet(2_000);
+        assertTrue(session.reviewLocation());
+    }
+
+    private PickupSession locatedSession() {
+        PickupSession session = new PickupSession();
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 0);
+        return session;
+    }
+
+    @Test public void handoffRequiresAReviewedPickup() {
+        PickupSession session = new PickupSession();
+        assertFalse(session.readyToHandoff());
+        session.manual();
+        assertFalse(session.readyToHandoff());
+        session.reviewManual("Rua Fictícia, 123");
+        assertTrue(session.readyToHandoff());
+        session.reset();
+        assertFalse(session.readyToHandoff());
+    }
+
+    @Test public void handoffRechecksPositionAgeAfterReview() {
+        AtomicLong clock = new AtomicLong(1_000);
+        PickupSession session = new PickupSession(clock::get);
+        session.useLocation(true);
+        session.located(LATITUDE, LONGITUDE, 10, 0);
+        assertTrue(session.reviewLocation());
+        assertTrue(session.readyToHandoff());
+        clock.addAndGet(120_001);
+        assertFalse(session.readyToHandoff());
+        assertNull(session.position());
+        assertEquals(PickupSession.State.UNAVAILABLE, session.state());
+    }
+
+    @Test public void revokedPermissionPreventsPreviouslyReviewedHandoff() {
+        PickupSession session = locatedSession();
+        session.reviewLocation();
+        session.permissionRevoked();
+        assertFalse(session.readyToHandoff());
+        assertNull(session.position());
+    }
+
+    @Test public void editingKeepsDraftButRequiresANewManualReview() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        session.reviewManual("Rua Fictícia, 10");
+        session.editManual();
+        assertEquals(PickupSession.State.MANUAL, session.state());
+        assertEquals("Rua Fictícia, 10", session.address());
+        assertNull(session.position());
+        assertFalse(session.readyToHandoff());
+        session.reviewManual(" Rua Fictícia, 20 ");
+        assertEquals("Rua Fictícia, 20", session.address());
+        assertTrue(session.readyToHandoff());
+    }
+
+    @Test public void editingOnlyAcceptsAReviewedManualPickup() {
+        PickupSession session = new PickupSession();
+        assertThrows(IllegalStateException.class, session::editManual);
+        session.manual();
+        assertThrows(IllegalStateException.class, session::editManual);
+        PickupSession located = locatedSession();
+        located.reviewLocation();
+        assertThrows(IllegalStateException.class, located::editManual);
+        assertEquals(PickupSession.State.REVIEW, located.state());
+        assertNotNull(located.position());
+    }
+
+    @Test public void invalidCorrectionCannotReusePreviousReview() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        session.reviewManual("Rua Fictícia, 10");
+        session.editManual();
+        assertThrows(IllegalArgumentException.class, () -> session.reviewManual(" "));
+        assertThrows(IllegalArgumentException.class, () -> session.reviewManual(
+                new String(new char[241]).replace('\0', 'x')));
+        assertEquals(PickupSession.State.MANUAL, session.state());
+        assertFalse(session.readyToHandoff());
+    }
+
+    @Test public void resettingOrChoosingAnotherMethodDiscardsEditDraft() {
+        PickupSession session = new PickupSession();
+        session.manual();
+        session.reviewManual("Rua Fictícia, 10");
+        session.editManual();
+        session.reset();
+        assertNull(session.address());
+        assertFalse(session.readyToHandoff());
+        session.manual();
+        session.reviewManual("Rua Fictícia, 20");
+        session.editManual();
+        session.useLocation(false);
+        assertNull(session.address());
+        assertNull(session.position());
+        assertEquals(PickupSession.State.PERMISSION, session.state());
+    }
+}
