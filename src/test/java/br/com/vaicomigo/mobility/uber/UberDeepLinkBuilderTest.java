@@ -4,6 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,5 +44,43 @@ class UberDeepLinkBuilderTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new UberLocation(0, 0, " ", "Rua de teste, 1"))
                 .withMessage("nickname must not be blank");
+    }
+
+    @Test
+    void shouldKeepReservedCharactersInsideExactlyEightLocationParameters() {
+        String nickname = "Embarque & x=1+2#fim/%";
+        String address = "Rua Fictícia, 1?porta=A&B";
+        URI link = UberDeepLinkBuilder.build(new UberRideRequest(
+                new UberLocation(0, 0, nickname, address),
+                new UberLocation(1, 1, "Destino de teste", "Rua Fictícia, 2")));
+
+        Map<String, String> parameters = Arrays.stream(link.getRawQuery().split("&"))
+                .map(pair -> pair.split("=", 2))
+                .collect(Collectors.toMap(
+                        pair -> URLDecoder.decode(pair[0], StandardCharsets.UTF_8),
+                        pair -> URLDecoder.decode(pair[1], StandardCharsets.UTF_8)));
+
+        assertThat(link.getFragment()).isNull();
+        assertThat(parameters).containsOnlyKeys("pickup[latitude]", "pickup[longitude]",
+                "pickup[nickname]", "pickup[formatted_address]", "dropoff[latitude]",
+                "dropoff[longitude]", "dropoff[nickname]", "dropoff[formatted_address]");
+        assertThat(parameters.get("pickup[nickname]")).isEqualTo(nickname);
+        assertThat(parameters.get("pickup[formatted_address]")).isEqualTo(address);
+    }
+
+    @Test
+    void shouldRejectNonFiniteAndOutOfRangeCoordinates() {
+        for (double latitude : new double[]{Double.NaN, Double.POSITIVE_INFINITY,
+                Double.NEGATIVE_INFINITY, -90.1, 90.1}) {
+            assertThatIllegalArgumentException().isThrownBy(
+                    () -> new UberLocation(latitude, 0, "Teste", "Rua Fictícia, 1"));
+        }
+        for (double longitude : new double[]{Double.NaN, Double.POSITIVE_INFINITY,
+                Double.NEGATIVE_INFINITY, -180.1, 180.1}) {
+            assertThatIllegalArgumentException().isThrownBy(
+                    () -> new UberLocation(0, longitude, "Teste", "Rua Fictícia, 1"));
+        }
+        assertThat(new UberLocation(-90, -180, "Teste", "Rua Fictícia, 1").latitude()).isEqualTo(-90);
+        assertThat(new UberLocation(90, 180, "Teste", "Rua Fictícia, 1").longitude()).isEqualTo(180);
     }
 }
