@@ -1,7 +1,16 @@
 # ADR 0002 — Deep link oficial para encaminhar ao Uber
 
-- Status: proposto
+- Status: proposta histórica do spike JVM; não representa aceite do aplicativo Android
 - Data: 2026-09-23
+
+## Situação na integração
+
+Este ADR preserva a proposta original da PR #14. O construtor Java é uma prova
+de conceito isolada: não é chamado por endpoint HTTP nem pelo cliente Android.
+O fluxo Android posterior está documentado no [ADR 0003](0003-explicit-uber-handoff.md)
+e na [busca com confirmação de pontos](../../android/geocoding.md).
+Integrar o spike não comprova o funcionamento do Uber instalado; a validação
+física permanece pendente nas issues #3, #7 e #17.
 
 ## Contexto
 

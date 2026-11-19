@@ -3,6 +3,15 @@
 - Status: aceito para a abertura inicial; preenchimento automático pendente
 - Data: 2026-10-19
 
+## Evolução após a abertura inicial
+
+A PR #25 acrescentou busca opcional com consentimento e escolha explícita dos
+dois pontos, mantendo a alternativa sem preenchimento. A implementação está em
+[geocoding.md](../../android/geocoding.md); a validação no Uber físico continua
+pendente. O [ADR 0002](0002-uber-deep-link.md), integrado posteriormente pela
+PR #14, registra uma prova de conceito JVM isolada e não substitui este fluxo.
+As seções abaixo preservam a decisão e a sequência de incrementos originais.
+
 ## Contexto
 
 Os favoritos atuais possuem nome e endereço em texto, sem coordenadas
